@@ -6,6 +6,7 @@ from vehicle import Vehicle
 from parking_request import ParkingRequest
 from allocation_engine import AllocationEngine
 from rollback_manager import RollbackManager
+from analytics import AnalyticsEngine
 from enums import RequestState
 
 
@@ -31,6 +32,9 @@ class ParkingSystem:
         
         # Rollback manager
         self.rollback_manager = RollbackManager()
+        
+        # Analytics engine
+        self.analytics = AnalyticsEngine(self)
         
         # History (linked list would be implemented here for DSA focus)
         # For simplicity, using Python list
