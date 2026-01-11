@@ -37,9 +37,15 @@ A sophisticated smart parking allocation and management system built with Python
 ### Advanced Features
 - **Adjacency Graph**: Custom graph implementation for zone relationships
 - **Dynamic Allocation**: First-fit algorithm for slot allocation
-- **Request History**: Linked-list based history tracking
+- **Request History**: Operation history tracking with rollback support
 - **Cancellation Support**: Cancel requests at any stage
-- **Comprehensive Logging**: Detailed operation tracking
+- **Comprehensive Analytics**: 6 analytics methods for system insights
+  - Average parking duration
+  - Zone utilization rates
+  - Request statistics by state
+  - Peak usage zone identification
+  - Cross-zone allocation tracking
+  - Comprehensive analytics summary
 
 ---
 
@@ -130,14 +136,14 @@ cd src
 python main.py
 ```
 
-This launches an **interactive menu-driven interface** where you can:
-- **Setup**: Add zones, parking areas, and link adjacent zones
-- **Register**: Register vehicles with preferred zones
-- **Parking Operations**: Create requests, allocate slots, mark occupied, release parking
-- **Query**: View system status, zone details, and request information
-- **Advanced**: Rollback operations and view operation history
+This launches an **interactive menu-driven interface** with 23 operations:
+- **Setup Operations** (3): Add zones, parking areas, and link adjacent zones
+- **Parking Operations** (5): Create requests, allocate, occupy, release, and cancel
+- **Query Operations** (5): View system status, zone status, request details, zones, and vehicles
+- **Analytics** (6): Comprehensive metrics including duration, utilization, statistics, and trends
+- **Advanced Operations** (2): Rollback operations and view operation history
 
-The system provides real-time feedback and guides you through each operation.
+The system provides real-time feedback and guides you through each operation with input validation and error handling.
 
 ---
 
@@ -246,6 +252,14 @@ if rollback_result['success']:
 - `get_request_by_id(request_id)` - Get request details
 - `get_all_requests()` - List all parking requests
 
+#### Analytics Operations
+- `analytics.get_average_parking_duration()` - Calculate average parking duration
+- `analytics.get_zone_utilization()` - Get utilization rates for all zones
+- `analytics.get_request_statistics()` - Get request breakdown by state
+- `analytics.get_peak_usage_zone()` - Identify most utilized zone
+- `analytics.get_cross_zone_allocation_statistics()` - Track cross-zone allocations
+- `analytics.get_comprehensive_analytics()` - Get all analytics data
+
 #### Rollback Operations
 - `rollback_operations(k)` - Rollback last k operations
 
@@ -294,10 +308,11 @@ All state transitions are validated. Invalid transitions are rejected automatica
 py_project/
 ├── src/
 │   ├── __init__.py                 # Package initializer
-│   ├── main.py                     # Demo & examples
+│   ├── main.py                     # Interactive menu system
 │   ├── parking_system.py           # Main controller
 │   ├── allocation_engine.py        # Slot allocation logic
 │   ├── rollback_manager.py         # Rollback operations
+│   ├── analytics.py                # Analytics engine
 │   ├── zone.py                     # Zone class
 │   ├── parking_area.py             # Parking area class
 │   ├── parking_slot.py             # Individual slot class
@@ -305,11 +320,17 @@ py_project/
 │   ├── parking_request.py          # Request with state machine
 │   └── enums.py                    # Enumerations & constants
 ├── docs/
-│   └── (detailed documentation)
+│   ├── API_REFERENCE.md            # Complete API docs
+│   ├── ARCHITECTURE.md             # System design
+│   ├── DSA_CONCEPTS.md             # Data structures explained
+│   ├── QUICK_START.md              # Getting started guide
+│   ├── USER_GUIDE.md               # User manual
+│   ├── DOCUMENTATION_UPDATES.md    # Update log
+│   └── README.md                   # Documentation index
 ├── planning/
 │   └── roadmap.md                  # Development roadmap
 ├── .gitignore                      # Git ignore rules
-└── README.md                       # This file
+└── readme.md                       # This file
 ```
 
 ---
@@ -385,12 +406,14 @@ Contributions are welcome! Areas for enhancement:
 
 - [ ] Implement GUI using Tkinter
 - [ ] Add priority queue for VIP requests
-- [ ] Implement true linked list for history
 - [ ] Add pricing/payment system
-- [ ] Database persistence
+- [ ] Database persistence (SQLite)
 - [ ] RESTful API layer
-- [ ] Unit test coverage
-- [ ] Performance optimization
+- [ ] Unit test coverage with pytest
+- [ ] Performance optimization for large-scale scenarios
+- [ ] Export analytics to CSV/JSON
+- [ ] Real-time notifications
+- [ ] Multi-tenant support
 
 ---
 
