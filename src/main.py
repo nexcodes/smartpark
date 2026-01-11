@@ -35,6 +35,14 @@ def print_menu():
     print("13. View All Zones")
     print("14. View All Vehicles")
     
+    print("\n--- ANALYTICS ---")
+    print("17. View Comprehensive Analytics")
+    print("18. View Average Parking Duration")
+    print("19. View Zone Utilization")
+    print("20. View Request Statistics")
+    print("21. View Peak Usage Zone")
+    print("22. View Cross-Zone Statistics")
+    
     print("\n--- ADVANCED OPERATIONS ---")
     print("15. Rollback Operations")
     print("16. View Operation History")
@@ -287,6 +295,98 @@ def view_operation_history(system):
     print_separator()
 
 
+def view_comprehensive_analytics(system):
+    """Display comprehensive analytics summary"""
+    print_separator()
+    summary = system.analytics.display_analytics_summary()
+    print(summary)
+
+
+def view_average_duration(system):
+    """Display average parking duration"""
+    print_separator()
+    print("AVERAGE PARKING DURATION")
+    print("-" * 40)
+    result = system.analytics.get_average_parking_duration()
+    
+    if result['completed_requests'] > 0:
+        print(f"Average Duration: {result['average_duration_minutes']} minutes")
+        print(f"                 ({result['average_duration_seconds']} seconds)")
+        print(f"Completed Sessions: {result['completed_requests']}")
+    else:
+        print(result['message'])
+    print_separator()
+
+
+def view_zone_utilization(system):
+    """Display zone utilization rates"""
+    print_separator()
+    print("ZONE UTILIZATION RATES")
+    print("-" * 40)
+    result = system.analytics.get_zone_utilization()
+    
+    if result['success'] and result['zones']:
+        for zone in result['zones']:
+            print(f"{zone['zone_id']}:")
+            print(f"  Utilization: {zone['utilization_rate']}%")
+            print(f"  Occupied: {zone['occupied']}/{zone['total_capacity']}")
+            print(f"  Available: {zone['available']}")
+            print()
+    else:
+        print(result.get('message', 'No data available'))
+    print_separator()
+
+
+def view_request_statistics(system):
+    """Display request statistics"""
+    print_separator()
+    print("REQUEST STATISTICS")
+    print("-" * 40)
+    result = system.analytics.get_request_statistics()
+    
+    print(f"Total Requests: {result['total_requests']}")
+    print(f"\nState Breakdown:")
+    print(f"  Requested: {result['state_breakdown']['requested']}")
+    print(f"  Allocated: {result['state_breakdown']['allocated']}")
+    print(f"  Occupied: {result['state_breakdown']['occupied']}")
+    print(f"  Released: {result['state_breakdown']['released']}")
+    print(f"  Cancelled: {result['state_breakdown']['cancelled']}")
+    print(f"\nCompletion Rate: {result['completion_rate']}%")
+    print(f"Cancellation Rate: {result['cancellation_rate']}%")
+    print_separator()
+
+
+def view_peak_usage_zone(system):
+    """Display peak usage zone"""
+    print_separator()
+    print("PEAK USAGE ZONE")
+    print("-" * 40)
+    result = system.analytics.get_peak_usage_zone()
+    
+    if result['success']:
+        print(f"Zone: {result['zone_id']}")
+        print(f"Utilization: {result['utilization_rate']}%")
+        print(f"Occupied: {result['occupied']}/{result['total_capacity']}")
+        print(f"Available: {result['available']}")
+    else:
+        print(result['message'])
+    print_separator()
+
+
+def view_cross_zone_statistics(system):
+    """Display cross-zone allocation statistics"""
+    print_separator()
+    print("CROSS-ZONE ALLOCATION STATISTICS")
+    print("-" * 40)
+    result = system.analytics.get_cross_zone_allocation_statistics()
+    
+    print(f"Total Allocations: {result['total_allocated']}")
+    print(f"Same Zone: {result['same_zone_allocations']}")
+    print(f"Cross Zone: {result['cross_zone_allocations']}")
+    print(f"Cross-Zone Percentage: {result['cross_zone_percentage']}%")
+    print_separator()
+
+
 def main():
     """Main application loop"""
     print("\n🚗 Initializing Smart Parking System...")
@@ -333,6 +433,18 @@ def main():
                 rollback_operations(system)
             elif choice == "16":
                 view_operation_history(system)
+            elif choice == "17":
+                view_comprehensive_analytics(system)
+            elif choice == "18":
+                view_average_duration(system)
+            elif choice == "19":
+                view_zone_utilization(system)
+            elif choice == "20":
+                view_request_statistics(system)
+            elif choice == "21":
+                view_peak_usage_zone(system)
+            elif choice == "22":
+                view_cross_zone_statistics(system)
             else:
                 print("❌ Invalid choice! Please select a valid option.")
         except Exception as e:
