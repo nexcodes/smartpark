@@ -1,143 +1,268 @@
-## 🗺️ Project Roadmap
+## SMART PARKING ALLOCATION & MANAGEMENT ROADMAP
 
-### **Phase 1: Core Data Structures**
+- **Language:** Python
+- **UI:** Tkinter
 
-#### 1.1 Parking Space Representation
-- [ ] Create `ParkingSpot` class
-  - Properties: spot_id, zone, type (regular/handicap/EV), status (occupied/available)
-  - Methods: reserve(), release(), get_status()
-- [ ] Implement linked list for parking spot chains within zones
+## Phase 1: Requirement Understanding & System Design
 
-#### 1.2 Zone Management
-- [ ] Create `Zone` class using trees/graphs
-  - Properties: zone_id, capacity, current_occupancy, pricing_tier
-  - Methods: add_spot(), remove_spot(), get_available_spots()
-- [ ] Use **Binary Search Tree (BST)** for zone hierarchy
-- [ ] Implement **Hash Map** for O(1) zone lookup
+### 1.1 Understand the Problem Domain
 
-#### 1.3 Vehicle Queue System
-- [ ] Implement **Queue** data structure for waiting vehicles
-- [ ] Create **Priority Queue** (Min Heap) for VIP/handicap priority
-- [ ] Add vehicle arrival timestamp tracking
+Break the system into **real-world entities**:
 
----
+- City → Zones → Parking Areas → Parking Slots
+- Vehicles
+- Parking Requests
+- Allocation + Rollback
+- Analytics
 
-### **Phase 2: Core Algorithms**
+### 1.2 Decide Core Data Structures (DSA Focus)
 
-#### 2.1 Parking Allocation Algorithm
-- [ ] **Greedy Algorithm**: Find nearest available spot
-- [ ] **Distance Optimization**: Use Dijkstra's algorithm for shortest path to parking
-- [ ] **Zone-based Search**: BFS/DFS for searching within zones
-- [ ] Implement spot recommendation based on:
-  - Distance to entrance/destination
-  - Vehicle type compatibility
-  - Zone pricing
+Avoid STL maps/graphs for core logic.
 
-#### 2.2 Search & Retrieval
-- [ ] Binary search for sorted parking records
-- [ ] Hash-based vehicle lookup by license plate
-- [ ] Implement search filters (by zone, type, availability)
+Suggested structures:
 
-#### 2.3 Optimization Algorithms
-- [ ] Load balancing across zones
-- [ ] Dynamic pricing based on occupancy (optional)
-- [ ] Time-slot based optimization
+- **Arrays / Dynamic Arrays** → Zones, Parking Areas
+- **Linked Lists** → Parking requests history
+- **Stacks** → Rollback mechanism
+- **Queues** → Incoming parking requests
+- **Enums + State Machine** → Request lifecycle
+
+### 1.3 Define State Machine
+
+```text
+REQUESTED → ALLOCATED → OCCUPIED → RELEASED
+REQUESTED → CANCELLED
+ALLOCATED → CANCELLED
+```
+
+Invalid transitions must be blocked.
 
 ---
 
-### **Phase 3: Advanced Features**
+## Phase 2: Core Logic Implementation (Without UI)
 
-#### 3.1 Booking & Reservation System
-- [ ] Implement **Stack** for undo/redo operations
-- [ ] Create reservation time-slot management (interval tree)
-- [ ] Handle booking conflicts and cancellations
-
-#### 3.2 Pathfinding & Navigation
-- [ ] Create parking lot graph representation
-- [ ] Implement **Dijkstra's Algorithm** for shortest path
-- [ ] Add **A* Algorithm** for optimal routing to parking spot
-
-#### 3.3 Analytics & Reporting
-- [ ] Track parking duration (using timestamps)
-- [ ] Calculate revenue per zone
-- [ ] Generate occupancy statistics
-- [ ] Peak hours analysis
+> ⚠️ Important: **Finish all logic in console mode first**
+> Tkinter UI should only _call_ these functions.
 
 ---
 
-### **Phase 4: Data Persistence & Testing**
+### 2.1 Class-by-Class Implementation
 
-#### 4.1 Data Management
-- [ ] Implement file I/O for saving/loading parking state
-- [ ] Use JSON/CSV for data persistence
-- [ ] Create backup and restore functionality
+#### ParkingSlot
 
-#### 4.2 Testing & Validation
-- [ ] Unit tests for each data structure
-- [ ] Test edge cases (full parking, empty parking)
-- [ ] Stress testing with large datasets
-- [ ] Performance benchmarking
+Responsibilities:
 
----
+- Slot ID
+- Zone ID
+- Availability
+- Occupied Vehicle ID
 
-### **Phase 5: User Interface & Integration**
+Key methods:
 
-#### 5.1 Command-Line Interface
-- [ ] Menu-driven interface
-- [ ] Admin panel (manage zones, spots, pricing)
-- [ ] User panel (find parking, make reservation, check-out)
-- [ ] Display visual parking lot map (ASCII art)
-
-#### 5.2 Additional Features
-- [ ] Multi-floor parking support
-- [ ] Entry/Exit gate simulation
-- [ ] Real-time availability dashboard
-- [ ] Vehicle history tracking
+- `allocate(vehicleId)`
+- `release()`
 
 ---
 
-## 🎯 Key Data Structures to Implement
+#### ParkingArea
 
-| Data Structure | Use Case |
-|----------------|----------|
-| **Linked List** | Chain parking spots within zones |
-| **Hash Map/Dictionary** | Fast vehicle & zone lookup |
-| **Binary Search Tree** | Hierarchical zone management |
-| **Queue** | Vehicle waiting line |
-| **Priority Queue (Heap)** | Priority-based parking allocation |
-| **Graph** | Parking lot layout & pathfinding |
-| **Stack** | Undo operations, navigation history |
-| **Array/List** | Store parking records |
+Responsibilities:
+
+- Collection of parking slots
+- Find first available slot
+
+DSA:
+
+- Array of `ParkingSlot`
 
 ---
 
-## 🧮 Key Algorithms to Implement
+#### Zone
 
-| Algorithm | Use Case |
-|-----------|----------|
-| **Binary Search** | Search sorted parking records |
-| **BFS/DFS** | Zone exploration, connectivity |
-| **Dijkstra's Algorithm** | Shortest path to parking spot |
-| **Greedy Algorithm** | Quick spot allocation |
-| **Sorting Algorithms** | Sort by distance, price, availability |
-| **Hashing** | Fast lookups |
+Responsibilities:
+
+- Zone ID
+- Parking areas
+- Logical adjacency (custom structure)
+
+DSA:
+
+- Array of ParkingArea
+- Custom adjacency list (array of zone IDs)
 
 ---
 
-## 📋 Core Functionalities
+#### Vehicle
 
-### User Operations
-1. Find available parking spot
-2. Reserve parking spot
-3. Check-in (occupy spot)
-4. Check-out (release spot & calculate fee)
-5. View parking history
-6. Search by vehicle license plate
+Responsibilities:
 
-### Admin Operations
-1. Add/remove parking zones
-2. Add/remove parking spots
-3. View real-time occupancy
-4. Generate reports
-5. Set pricing tiers
-6. Manage reservations
+- Vehicle ID
+- Preferred zone
+
+---
+
+#### ParkingRequest
+
+Responsibilities:
+
+- Vehicle ID
+- Requested zone
+- Timestamp
+- Current state
+
+Includes:
+
+- Enum `RequestState`
+
+---
+
+### 2.2 Allocation Engine
+
+Responsibilities:
+
+- Same-zone allocation first
+- Cross-zone allocation with penalty
+- Enforce rules
+
+Methods:
+
+- `allocateSlot(ParkingRequest&)`
+- `cancelRequest(ParkingRequest&)`
+
+---
+
+### 2.3 Rollback Manager
+
+Core DSA component.
+
+Use:
+
+- **Stack of operations**
+
+Each stack entry stores:
+
+- Slot ID
+- Previous availability
+- Request previous state
+
+Supports:
+
+- Rollback last **k** operations
+
+---
+
+### 2.4 Parking System (Controller)
+
+Acts as the **brain**:
+
+- Holds all zones
+- Manages requests
+- Connects allocation + rollback
+- Stores history for analytics
+
+---
+
+## Phase 3: Analytics Module
+
+### Metrics to Implement
+
+- Average parking duration
+- Zone utilization rate
+- Cancelled vs completed requests
+- Peak usage zone
+
+DSA Used:
+
+- Traversing linked lists
+- Counters & accumulators
+
+⚠️ Must handle **rollback-adjusted data**
+
+---
+
+## Phase 4: Tkinter UI Integration
+
+### 4.1 Tkinter Project Setup
+
+- Tkinter Application (included with Python standard library)
+- Virtual environment setup (optional)
+- No additional dependencies required
+
+### 4.2 UI Screens
+
+Minimum recommended screens:
+
+1. **Main Dashboard**
+
+   - Total slots
+   - Occupied slots
+   - Active requests
+
+2. **Parking Request Screen**
+
+   - Vehicle ID input
+   - Zone selection
+   - Request parking button
+
+3. **Allocation Status Screen**
+
+   - Slot allocated
+   - Zone
+   - Penalty if cross-zone
+
+4. **Cancellation & Rollback Screen**
+
+   - Cancel request
+   - Rollback last k operations
+
+5. **Analytics Screen**
+
+   - Table + labels (Treeview or Text widget)
+
+---
+
+### 4.3 Tkinter → Python Core Communication
+
+Tkinter UI should:
+
+- Call methods from `ParkingSystem`
+- Never store logic inside UI classes
+
+Example:
+
+```python
+def on_request_parking_clicked(self):
+    vehicle_id = self.vehicle_id_entry.get()
+    zone_id = self.zone_id_entry.get()
+    self.parking_system.create_request(vehicle_id, zone_id)
+```
+
+---
+
+## Phase 5: Testing & Validation (Week 6)
+
+### Required Test Cases
+
+At least **10**, including:
+
+- Same-zone allocation
+- Cross-zone allocation
+- Cancellation before allocation
+- Cancellation after allocation
+- Rollback correctness
+- Invalid state transition rejection
+- Analytics after rollback
+
+---
+
+## Final Architecture Overview
+
+```text
+Tkinter UI (Widgets)
+     ↓
+ParkingSystem
+     ↓
+AllocationEngine ↔ RollbackManager
+     ↓
+Zones → Areas → Slots
+```
