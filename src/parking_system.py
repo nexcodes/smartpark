@@ -44,11 +44,20 @@ class ParkingSystem:
             zone_id: Unique identifier for the zone
             
         Returns:
-            Zone: The created zone
+            dict: Result with success status and message
         """
+        if zone_id in self.zones:
+            return {
+                'success': False,
+                'message': f'Zone {zone_id} already exists'
+            }
+        
         zone = Zone(zone_id)
         self.zones[zone_id] = zone
-        return zone
+        return {
+            'success': True,
+            'message': f'Zone {zone_id} created successfully'
+        }
     
     def add_parking_area_to_zone(self, zone_id, area_id, capacity):
         """
@@ -60,13 +69,19 @@ class ParkingSystem:
             capacity: Number of parking slots
             
         Returns:
-            bool: True if successful, False if zone not found
+            dict: Result with success status and message
         """
         if zone_id not in self.zones:
-            return False
+            return {
+                'success': False,
+                'message': f'Zone {zone_id} not found'
+            }
         
         self.zones[zone_id].add_parking_area(area_id, capacity)
-        return True
+        return {
+            'success': True,
+            'message': f'Parking area {area_id} added to {zone_id} with {capacity} slots'
+        }
     
     def link_adjacent_zones(self, zone1_id, zone2_id):
         """
@@ -77,14 +92,20 @@ class ParkingSystem:
             zone2_id: Second zone ID
             
         Returns:
-            bool: True if successful, False if either zone not found
+            dict: Result with success status and message
         """
         if zone1_id not in self.zones or zone2_id not in self.zones:
-            return False
+            return {
+                'success': False,
+                'message': f'One or both zones not found'
+            }
         
         self.zones[zone1_id].add_adjacent_zone(zone2_id)
         self.zones[zone2_id].add_adjacent_zone(zone1_id)
-        return True
+        return {
+            'success': True,
+            'message': f'Linked {zone1_id} ↔ {zone2_id}'
+        }
     
     def register_vehicle(self, vehicle_id, preferred_zone):
         """
@@ -95,11 +116,21 @@ class ParkingSystem:
             preferred_zone: Zone ID where vehicle prefers to park
             
         Returns:
-            Vehicle: The created vehicle
+            dict: Result with success status and message
         """
+        if vehicle_id in self.vehicles:
+            return {
+                'success': False,
+                'message': f'Vehicle {vehicle_id} already registered'
+            }
+        
         vehicle = Vehicle(vehicle_id, preferred_zone)
         self.vehicles[vehicle_id] = vehicle
-        return vehicle
+        pref_msg = f' with preferred zone {preferred_zone}' if preferred_zone else ''
+        return {
+            'success': True,
+            'message': f'Vehicle {vehicle_id} registered{pref_msg}'
+        }
     
     def create_parking_request(self, vehicle_id, requested_zone):
         """
@@ -124,6 +155,7 @@ class ParkingSystem:
         return {
             'success': True,
             'request_id': request_id,
+            'state': request.current_state.value,
             'message': f'Parking request {request_id} created'
         }
     
