@@ -142,6 +142,7 @@ class RollbackManager:
             }
         
         rolled_back = []
+        skipped = []
         
         for _ in range(k):
             if not self.operation_stack:
@@ -153,6 +154,7 @@ class RollbackManager:
             # Get the request
             request = requests_dict.get(operation.request_id)
             if not request:
+                skipped.append(operation.request_id)
                 continue
             
             # Rollback based on operation type
@@ -172,7 +174,8 @@ class RollbackManager:
         return {
             'success': True,
             'message': f'Successfully rolled back {len(rolled_back)} operations',
-            'rolled_back': rolled_back
+            'rolled_back': rolled_back,
+            'skipped': skipped
         }
     
     def _rollback_allocation(self, operation, zones, request):

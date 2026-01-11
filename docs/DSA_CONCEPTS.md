@@ -16,9 +16,6 @@ This project demonstrates practical applications of fundamental DSA concepts in 
 2. [Stacks](#2-stacks)
 3. [Graphs](#3-graphs)
 4. [State Machines](#4-state-machines)
-5. [Hash Tables](#5-hash-tables)
-6. [Search Algorithms](#6-search-algorithms)
-7. [Future DSA Enhancements](#7-future-dsa-enhancements)
 
 ---
 

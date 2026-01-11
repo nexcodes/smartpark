@@ -3,7 +3,6 @@ Smart Parking Allocation & Management System
 Interactive user-controlled interface
 """
 from parking_system import ParkingSystem
-from enums import RequestState
 
 
 def print_separator():
@@ -188,6 +187,9 @@ def view_zone_status(system):
     
     try:
         status = system.get_zone_status(zone_id)
+        if status is None:
+            print(f"❌ Zone '{zone_id}' not found")
+            return
         print_separator()
         print(f"ZONE STATUS: {zone_id}")
         print("-" * 40)
@@ -234,7 +236,7 @@ def view_all_zones(system):
     if status['total_zones'] == 0:
         print("No zones created yet.")
     else:
-        for zone_id, zone in system.zones.items():
+        for zone_id in system.zones:
             zone_status = system.get_zone_status(zone_id)
             print(f"{zone_id}: {zone_status['available']}/{zone_status['total_capacity']} available")
     print_separator()

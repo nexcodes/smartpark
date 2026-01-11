@@ -236,13 +236,15 @@ for vehicle_id, preferred_zone in vehicles:
 
 ```python
 def print_system_status(system):
-    summary = system.get_system_summary()
+    status = system.get_system_status()
     print("\n=== System Status ===")
-    print(f"Total Slots: {summary['total_slots']}")
-    print(f"Available: {summary['available_slots']}")
-    print(f"Occupied: {summary['occupied_slots']}")
-    print(f"Occupancy: {summary['overall_occupancy_rate']:.1f}%")
-    print(f"Active Requests: {summary['active_requests']}")
+    print(f"Total Slots: {status['total_slots']}")
+    print(f"Available: {status['available_slots']}")
+    print(f"Occupied: {status['occupied_slots']}")
+    # Compute occupancy rate safely
+    occupancy_rate = (status['occupied_slots'] / status['total_slots'] * 100) if status['total_slots'] > 0 else 0.0
+    print(f"Occupancy: {occupancy_rate:.1f}%")
+    print(f"Active Requests: {status['active_requests']}")
     print()
 
 # Use it
@@ -326,11 +328,11 @@ system.release_parking(req['request_id'])
 
 # Monitoring
 system.get_zone_status("ZONE-A")
-system.get_system_summary()
+system.get_system_status()
 
 # Advanced
-system.cancel_request(request_id)
-system.rollback_last_operation()
+system.cancel_parking_request(request_id)
+system.rollback_operations(1)  # Rollback last operation
 ```
 
 ---

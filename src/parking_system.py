@@ -97,7 +97,7 @@ class ParkingSystem:
         if zone1_id not in self.zones or zone2_id not in self.zones:
             return {
                 'success': False,
-                'message': f'One or both zones not found'
+                'message': 'One or both zones not found'
             }
         
         self.zones[zone1_id].add_adjacent_zone(zone2_id)

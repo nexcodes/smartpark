@@ -340,7 +340,7 @@ request_id = req['request_id']
 alloc = system.allocate_parking(request_id)
 # Penalty: 0 (same zone)
 
-system.mark_occupied(request_id)
+system.mark_parking_occupied(request_id)
 # ... vehicle parked ...
 system.release_parking(request_id)
 ```
@@ -381,7 +381,7 @@ request_id = req['request_id']
 system.allocate_parking(request_id)
 
 # User changes mind before parking
-cancel = system.cancel_request(request_id)
+cancel = system.cancel_parking_request(request_id)
 # Slot is released and available again
 ```
 
@@ -395,7 +395,7 @@ req = system.create_parking_request("CAR-001", "ZONE-A")
 alloc = system.allocate_parking(req['request_id'])
 
 # Oops, wrong request!
-rollback = system.rollback_last_operation()
+rollback = system.rollback_operations(1)
 # Allocation is undone, slot available again
 
 # Correct allocation
@@ -425,8 +425,8 @@ system.register_vehicle("CAR-001", "ZONE-A")
 **Solutions:**
 1. Check zone status:
    ```python
-   zones = system.list_all_zones()
-   # All show 0 available
+   status = system.get_system_status()
+   # Check status['zones'] - all show 0 available
    ```
 
 2. Release some slots:
@@ -453,9 +453,9 @@ system.mark_occupied(request_id)  # ✗ Invalid
 
 **Solution:** Check request state first:
 ```python
-status = system.get_request_status(request_id)
-if status['state'] == 'ALLOCATED':
-    system.mark_occupied(request_id)  # ✓ Valid
+request = system.get_request_by_id(request_id)
+if request and request.state == 'ALLOCATED':
+    system.mark_parking_occupied(request_id)  # ✓ Valid
 ```
 
 ---
@@ -480,7 +480,7 @@ if status['state'] == 'ALLOCATED':
 3. **Balance load:**
    ```python
    # Encourage users to use less popular zones
-   summary = system.get_system_summary()
+   summary = system.get_system_status()
    # Guide users to zones with high availability
    ```
 
