@@ -123,19 +123,21 @@ A sophisticated smart parking allocation and management system built with Python
 
 2. **No additional setup needed** - All components use Python standard library
 
-### Running the Demo
+### Running the System
 
 ```bash
 cd src
 python main.py
 ```
 
-This will run comprehensive demonstrations including:
-- Basic allocation operations
-- Cross-zone allocation with penalties
-- Request cancellation
-- Rollback operations
-- Zone status monitoring
+This launches an **interactive menu-driven interface** where you can:
+- **Setup**: Add zones, parking areas, and link adjacent zones
+- **Register**: Register vehicles with preferred zones
+- **Parking Operations**: Create requests, allocate slots, mark occupied, release parking
+- **Query**: View system status, zone details, and request information
+- **Advanced**: Rollback operations and view operation history
+
+The system provides real-time feedback and guides you through each operation.
 
 ---
 
@@ -165,11 +167,13 @@ system.link_adjacent_zones("ZONE-A", "ZONE-B")
 
 ```python
 # Register a vehicle
-system.register_vehicle("CAR-001", preferred_zone="ZONE-A")
+result = system.register_vehicle("CAR-001", preferred_zone="ZONE-A")
+print(result['message'])
 
 # Create parking request
 result = system.create_parking_request("CAR-001", "ZONE-A")
 request_id = result['request_id']
+print(f"Request ID: {request_id}, State: {result['state']}")
 
 # Allocate parking
 allocation = system.allocate_parking(request_id)
@@ -183,27 +187,37 @@ if allocation['success']:
 ### Monitoring & Analytics
 
 ```python
+# Get system status
+system_status = system.get_system_status()
+print(f"Total slots: {system_status['total_slots']}")
+print(f"Available: {system_status['available_slots']}")
+print(f"Active requests: {system_status['active_requests']}")
+
 # Get zone status
-status = system.get_zone_status("ZONE-A")
-print(f"Occupied: {status['occupied']}/{status['total_capacity']}")
-print(f"Occupancy Rate: {status['occupancy_rate']}%")
+zone_status = system.get_zone_status("ZONE-A")
+print(f"Occupied: {zone_status['occupied']}/{zone_status['total_capacity']}")
+print(f"Number of areas: {zone_status['areas']}")
 
 # Get request details
-request_info = system.get_request_status(request_id)
-print(f"State: {request_info['state']}")
-print(f"Duration: {request_info['duration']}")
+request = system.get_request_by_id(request_id)
+print(f"State: {request.current_state.value}")
+print(f"Allocated slot: {request.allocated_slot_id}")
 ```
 
 ### Cancellation & Rollback
 
 ```python
 # Cancel a request
-system.cancel_request(request_id)
+cancel_result = system.cancel_parking_request(request_id)
+if cancel_result['success']:
+    print(cancel_result['message'])
 
-# Rollback last operation
-rollback_result = system.rollback_last_operation()
+# Rollback last 2 operations
+rollback_result = system.rollback_operations(2)
 if rollback_result['success']:
-    print(f"Rolled back: {rollback_result['operation_type']}")
+    print(rollback_result['message'])
+    for op in rollback_result['rolled_back']:
+        print(f"  - {op['operation']} on {op['request_id']}")
 ```
 
 ---
@@ -222,15 +236,18 @@ if rollback_result['success']:
 - `register_vehicle(vehicle_id, preferred_zone)` - Register vehicle
 - `create_parking_request(vehicle_id, zone_id)` - Create new request
 - `allocate_parking(request_id)` - Allocate parking slot
-- `mark_occupied(request_id)` - Mark vehicle as parked
+- `mark_parking_occupied(request_id)` - Mark vehicle as parked
 - `release_parking(request_id)` - Release parking slot
-- `cancel_request(request_id)` - Cancel request
+- `cancel_parking_request(request_id)` - Cancel request
 
-#### Operations
-- `rollback_last_operation()` - Undo last operation
-- `get_request_status(request_id)` - Get request details
-- `list_all_zones()` - List all zones with status
-- `get_system_summary()` - Get overall statistics
+#### Query Operations
+- `get_system_status()` - Get overall system statistics
+- `get_zone_status(zone_id)` - Get zone details
+- `get_request_by_id(request_id)` - Get request details
+- `get_all_requests()` - List all parking requests
+
+#### Rollback Operations
+- `rollback_operations(k)` - Rollback last k operations
 
 ---
 

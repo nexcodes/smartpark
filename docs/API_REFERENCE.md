@@ -103,57 +103,26 @@ print(f"Occupancy: {status['occupancy_rate']}%")
 
 ---
 
-### `list_all_zones() -> list`
-
-Gets a list of all zones with their status.
-
-**Returns:**
-- `list`: Array of zone status dictionaries
-
-**Example:**
-```python
-zones = system.list_all_zones()
-for zone in zones:
-    print(f"{zone['zone_id']}: {zone['available']}/{zone['total_capacity']} available")
-```
-
----
-
 ## Vehicle Management Methods
 
-### `register_vehicle(vehicle_id: str, preferred_zone: str) -> Vehicle`
+### `register_vehicle(vehicle_id: str, preferred_zone: str) -> dict`
 
 Registers a new vehicle in the system.
 
 **Parameters:**
 - `vehicle_id` (str): Unique identifier for the vehicle
-- `preferred_zone` (str): Zone ID where vehicle prefers to park
+- `preferred_zone` (str): Zone ID where vehicle prefers to park (can be None)
 
 **Returns:**
-- `Vehicle`: The created vehicle object
+- `dict`: Result with keys:
+  - `success` (bool): Whether registration succeeded
+  - `message` (str): Status message
 
 **Example:**
 ```python
-vehicle = system.register_vehicle("CAR-001", "ZONE-A")
-```
-
----
-
-### `get_vehicle(vehicle_id: str) -> Vehicle | None`
-
-Retrieves vehicle information.
-
-**Parameters:**
-- `vehicle_id` (str): Vehicle identifier
-
-**Returns:**
-- `Vehicle`: Vehicle object or None if not found
-
-**Example:**
-```python
-vehicle = system.get_vehicle("CAR-001")
-if vehicle:
-    print(f"Prefers: {vehicle.preferred_zone}")
+result = system.register_vehicle("CAR-001", "ZONE-A")
+if result['success']:
+    print(result['message'])
 ```
 
 ---
@@ -171,7 +140,8 @@ Creates a new parking request.
 **Returns:**
 - `dict`: Result with keys:
   - `success` (bool): Whether request was created
-  - `request_id` (str): Generated request ID
+  - `request_id` (str): Generated request ID (format: REQ####)
+  - `state` (str): Initial state ("REQUESTED")
   - `message` (str): Status message
 
 **Example:**
@@ -212,7 +182,7 @@ if result['success']:
 
 ---
 
-### `mark_occupied(request_id: str) -> dict`
+### `mark_parking_occupied(request_id: str) -> dict`
 
 Marks an allocated parking slot as occupied by the vehicle.
 
@@ -226,7 +196,9 @@ Marks an allocated parking slot as occupied by the vehicle.
 
 **Example:**
 ```python
-result = system.mark_occupied(request_id)
+result = system.mark_parking_occupied(request_id)
+if result['success']:
+    print(result['message'])
 ```
 
 ---
@@ -241,20 +213,18 @@ Releases a parking slot (vehicle leaves).
 **Returns:**
 - `dict`: Result with keys:
   - `success` (bool): Whether release succeeded
-  - `slot_id` (str): Released slot ID
-  - `duration` (float): Parking duration in seconds
   - `message` (str): Status message
 
 **Example:**
 ```python
 result = system.release_parking(request_id)
 if result['success']:
-    print(f"Parked for {result['duration']:.0f} seconds")
+    print(result['message'])
 ```
 
 ---
 
-### `cancel_request(request_id: str) -> dict`
+### `cancel_parking_request(request_id: str) -> dict`
 
 Cancels a parking request (any state except RELEASED).
 
@@ -264,89 +234,135 @@ Cancels a parking request (any state except RELEASED).
 **Returns:**
 - `dict`: Result with keys:
   - `success` (bool): Whether cancellation succeeded
-  - `previous_state` (str): State before cancellation
   - `message` (str): Status message
 
 **Example:**
 ```python
-result = system.cancel_request(request_id)
+result = system.cancel_parking_request(request_id)
+if result['success']:
+    print(result['message'])
 ```
 
 ---
 
-### `get_request_status(request_id: str) -> dict`
+### `get_request_by_id(request_id: str) -> ParkingRequest | None`
 
-Gets detailed information about a parking request.
+Gets a parking request object by its ID.
 
 **Parameters:**
 - `request_id` (str): Request ID to query
 
 **Returns:**
-- `dict`: Request information with keys:
-  - `request_id` (str): Request identifier
-  - `vehicle_id` (str): Vehicle identifier
-  - `requested_zone` (str): Originally requested zone
-  - `allocated_zone` (str): Actually allocated zone (or None)
-  - `allocated_slot_id` (str): Allocated slot (or None)
-  - `state` (str): Current state
-  - `timestamp` (datetime): Request creation time
-  - `duration` (float): Parking duration in seconds (or None)
-  - `is_cross_zone` (bool): Whether cross-zone allocation
+- `ParkingRequest`: Request object or None if not found
 
 **Example:**
 ```python
-status = system.get_request_status(request_id)
-print(f"State: {status['state']}")
-if status['is_cross_zone']:
-    print(f"Cross-zone: {status['requested_zone']} → {status['allocated_zone']}")
+request = system.get_request_by_id(request_id)
+if request:
+    print(f"State: {request.current_state.value}")
+    print(f"Vehicle: {request.vehicle_id}")
+    print(f"Requested Zone: {request.requested_zone}")
+    if request.allocated_slot_id:
+        print(f"Allocated Slot: {request.allocated_slot_id}")
+        print(f"Allocated Zone: {request.allocated_zone}")
+```
+
+---
+
+### `get_all_requests() -> list`
+
+Gets all parking requests in the system.
+
+**Returns:**
+- `list`: List of ParkingRequest objects
+
+**Example:**
+```python
+requests = system.get_all_requests()
+for request in requests:
+    print(f"{request.request_id}: {request.current_state.value}")
 ```
 
 ---
 
 ## Rollback Methods
 
-### `rollback_last_operation() -> dict`
+### `rollback_operations(k: int) -> dict`
 
-Rolls back the most recent operation using stack-based undo.
+Rolls back the last k operations using stack-based undo.
+
+**Parameters:**
+- `k` (int): Number of operations to rollback
 
 **Returns:**
 - `dict`: Rollback result with keys:
   - `success` (bool): Whether rollback succeeded
-  - `operation_type` (str): Type of operation rolled back
-  - `request_id` (str): Affected request ID
   - `message` (str): Description
+  - `rolled_back` (list): List of rolled back operations, each with:
+    - `operation` (str): Operation type (ALLOCATE, CANCEL, RELEASE)
+    - `request_id` (str): Affected request ID
 
 **Example:**
 ```python
-result = system.rollback_last_operation()
+result = system.rollback_operations(2)
 if result['success']:
-    print(f"Rolled back: {result['operation_type']}")
+    print(result['message'])
+    for op in result['rolled_back']:
+        print(f"  - {op['operation']} on {op['request_id']}")
 ```
 
 ---
 
 ## Analytics Methods
 
-### `get_system_summary() -> dict`
+### `get_system_status() -> dict`
 
 Gets overall system statistics.
 
 **Returns:**
-- `dict`: System summary with keys:
+- `dict`: System status with keys:
   - `total_zones` (int): Number of zones
   - `total_slots` (int): Total parking slots
   - `available_slots` (int): Currently available
   - `occupied_slots` (int): Currently occupied
-  - `overall_occupancy_rate` (float): Percentage
   - `total_requests` (int): All requests created
-  - `active_requests` (int): Non-released/cancelled
-  - `registered_vehicles` (int): Vehicle count
+  - `active_requests` (int): Non-released/cancelled requests
+  - `operations_in_history` (int): Operations in rollback stack
 
 **Example:**
 ```python
-summary = system.get_system_summary()
-print(f"Occupancy: {summary['overall_occupancy_rate']:.1f}%")
-print(f"Active Requests: {summary['active_requests']}")
+status = system.get_system_status()
+print(f"Total slots: {status['total_slots']}")
+print(f"Available: {status['available_slots']}")
+print(f"Active Requests: {status['active_requests']}")
+print(f"Operations in History: {status['operations_in_history']}")
+```
+
+---
+
+### `get_zone_status(zone_id: str) -> dict | None`
+
+Gets status of a specific zone.
+
+**Parameters:**
+- `zone_id` (str): Zone ID to query
+
+**Returns:**
+- `dict`: Zone status with keys:
+  - `zone_id` (str): Zone identifier
+  - `total_capacity` (int): Total slots in zone
+  - `available` (int): Available slots
+  - `occupied` (int): Occupied slots
+  - `areas` (int): Number of parking areas
+  - `adjacent_zones` (list): List of adjacent zone IDs
+- `None`: If zone not found
+
+**Example:**
+```python
+status = system.get_zone_status("ZONE-A")
+if status:
+    print(f"Capacity: {status['available']}/{status['total_capacity']}")
+    print(f"Adjacent: {', '.join(status['adjacent_zones'])}")
 ```
 
 ---
@@ -468,9 +484,11 @@ All methods return dictionaries with `success` boolean and `message` string. Che
 
 4. **Use rollback carefully:**
    ```python
-   # Rollback only undoes the LAST operation
-   # Cannot rollback multiple operations at once
-   system.rollback_last_operation()
+   # Rollback k operations from the stack
+   result = system.rollback_operations(2)  # Rollback last 2 operations
+   if result['success']:
+       for op in result['rolled_back']:
+           print(f"Rolled back: {op['operation']}")
    ```
 
 ---
@@ -480,27 +498,37 @@ All methods return dictionaries with `success` boolean and `message` string. Che
 ```python
 # 1. Setup
 system = ParkingSystem()
-system.add_zone("ZONE-A")
-system.add_parking_area_to_zone("ZONE-A", "A1", 10)
+result = system.add_zone("ZONE-A")
+result = system.add_parking_area_to_zone("ZONE-A", "A1", 10)
 
 # 2. Register vehicle
-system.register_vehicle("CAR-001", "ZONE-A")
+result = system.register_vehicle("CAR-001", "ZONE-A")
+if result['success']:
+    print(result['message'])
 
 # 3. Request parking
 req_result = system.create_parking_request("CAR-001", "ZONE-A")
 request_id = req_result['request_id']
+print(f"Request ID: {request_id}, State: {req_result['state']}")
 
 # 4. Allocate
 alloc_result = system.allocate_parking(request_id)
 if alloc_result['success']:
     print(f"Allocated: {alloc_result['slot_id']}")
+    print(f"Zone: {alloc_result['zone_id']}")
+    print(f"Penalty: {alloc_result['penalty']}")
     
     # 5. Mark as occupied
-    system.mark_occupied(request_id)
+    result = system.mark_parking_occupied(request_id)
+    print(result['message'])
     
-    # 6. Later... release
+    # 6. Check status
+    request = system.get_request_by_id(request_id)
+    print(f"Current state: {request.current_state.value}")
+    
+    # 7. Later... release
     release_result = system.release_parking(request_id)
-    print(f"Duration: {release_result['duration']} seconds")
+    print(release_result['message'])
 ```
 
 ---

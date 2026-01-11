@@ -22,14 +22,21 @@ python --version
 
 ---
 
-## Run the Demo
+## Run the Interactive System
 
 ```bash
 cd src
 python main.py
 ```
 
-You'll see comprehensive demonstrations of all features with detailed output.
+**What You'll See:**
+- An interactive menu with 17+ options
+- Setup operations (add zones, areas, link zones)
+- Parking operations (register, request, allocate, release)
+- Query operations (view status, requests, zones)
+- Advanced features (rollback, operation history)
+
+The system provides real-time feedback and validation for each operation.
 
 ---
 
@@ -65,18 +72,19 @@ Add to `my_parking.py`:
 
 ```python
 # Register your vehicle
-system.register_vehicle("MY-CAR", preferred_zone="MAIN-ZONE")
-print("✓ Vehicle registered")
+result = system.register_vehicle("MY-CAR", preferred_zone="MAIN-ZONE")
+print(f"✓ {result['message']}")
 
 # Request parking
 result = system.create_parking_request("MY-CAR", "MAIN-ZONE")
 request_id = result['request_id']
-print(f"✓ Request created: {request_id}")
+print(f"✓ Request created: {request_id}, State: {result['state']}")
 
 # Allocate a slot
 allocation = system.allocate_parking(request_id)
 if allocation['success']:
     print(f"✓ Allocated slot: {allocation['slot_id']}")
+    print(f"  Zone: {allocation['zone_id']}")
     print(f"  Penalty: {allocation['penalty']}")
 ```
 
@@ -88,16 +96,21 @@ Add to `my_parking.py`:
 
 ```python
 # Mark as occupied (vehicle has parked)
-system.mark_occupied(request_id)
-print("✓ Vehicle parked")
+result = system.mark_parking_occupied(request_id)
+print(f"✓ {result['message']}")
+
+# Check system status
+system_status = system.get_system_status()
+print(f"✓ System: {system_status['occupied_slots']}/{system_status['total_slots']} occupied")
 
 # Check zone status
-status = system.get_zone_status("MAIN-ZONE")
-print(f"✓ Zone status: {status['occupied']}/{status['total_capacity']} occupied")
+zone_status = system.get_zone_status("MAIN-ZONE")
+print(f"✓ Zone status: {zone_status['occupied']}/{zone_status['total_capacity']} occupied")
 
 # Release parking (vehicle leaves)
 release = system.release_parking(request_id)
-print(f"✓ Vehicle left after {release['duration']:.0f} seconds")
+if release['success']:
+    print(f"✓ {release['message']}")
 
 # Check zone status again
 status = system.get_zone_status("MAIN-ZONE")
@@ -187,16 +200,17 @@ print(f"Penalty: {allocation['penalty']}")
 ```python
 # Good practice: Check zone availability first
 status = system.get_zone_status("ZONE-A")
-if status['available'] > 0:
+if status and status['available'] > 0:
     # Allocate in preferred zone
     req = system.create_parking_request(vehicle_id, "ZONE-A")
+    system.allocate_parking(req['request_id'])
 else:
-    # Suggest alternative zone
-    all_zones = system.list_all_zones()
-    available_zones = [z for z in all_zones if z['available'] > 0]
-    if available_zones:
-        best_zone = max(available_zones, key=lambda z: z['available'])
-        print(f"ZONE-A full. Try {best_zone['zone_id']} instead")
+    print("ZONE-A is full. Consider adjacent zones.")
+    # You can check adjacent zones from status['adjacent_zones']
+    for adj_zone in status['adjacent_zones']:
+        adj_status = system.get_zone_status(adj_zone)
+        if adj_status and adj_status['available'] > 0:
+            print(f"{adj_zone} has {adj_status['available']} slots available")
 ```
 
 ---
@@ -318,6 +332,53 @@ system.get_system_summary()
 system.cancel_request(request_id)
 system.rollback_last_operation()
 ```
+
+---
+
+## Using the Interactive Menu (Alternative)
+
+Instead of writing code, you can use the built-in interactive menu:
+
+```bash
+cd src
+python main.py
+```
+
+**Menu Flow Example:**
+
+1. **Add a zone:**
+   - Select option `1` (Add Zone)
+   - Enter Zone ID: `ZONE-A`
+
+2. **Add parking area:**
+   - Select option `2` (Add Parking Area to Zone)
+   - Enter Zone ID: `ZONE-A`
+   - Enter Area ID: `A1`
+   - Enter capacity: `10`
+
+3. **Register vehicle:**
+   - Select option `4` (Register Vehicle)
+   - Enter Vehicle ID: `CAR-001`
+   - Enter preferred zone: `ZONE-A`
+
+4. **Create and allocate parking:**
+   - Select option `5` (Create Parking Request)
+   - Enter Vehicle ID: `CAR-001`
+   - Enter requested zone: `ZONE-A`
+   - Note the Request ID (e.g., `REQ0001`)
+   
+   - Select option `6` (Allocate Parking)
+   - Enter Request ID: `REQ0001`
+
+5. **View status:**
+   - Select option `10` (View System Status)
+   - Or option `11` (View Zone Status)
+
+The interactive menu is perfect for:
+- Testing the system without coding
+- Quick demonstrations
+- Learning the API flow
+- Experimenting with features
 
 ---
 

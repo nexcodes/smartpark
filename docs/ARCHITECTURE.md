@@ -105,22 +105,25 @@ class Operation:
 **Rollback Process:**
 
 ```
-rollback_last_operation():
-    1. Pop operation from stack
-    2. Restore slot state:
-       - availability = previous_availability
-       - vehicle_id = previous_vehicle_id
-    3. Restore request state:
-       - state = previous_state
-       - allocated_slot = previous_slot
-       - allocated_zone = previous_zone
-    4. Return success
+rollback_operations(k):
+    1. Validate k <= stack size
+    2. For i = 1 to k:
+       a. Pop operation from stack
+       b. Restore slot state:
+          - availability = previous_availability
+          - vehicle_id = previous_vehicle_id
+       c. Restore request state:
+          - state = previous_state
+          - allocated_slot = previous_slot
+          - allocated_zone = previous_zone
+       d. Record operation in result
+    3. Return success with list of rolled back operations
 ```
 
 **Limitations:**
-- Only undoes last operation
-- Cannot selectively undo
+- Cannot selectively undo (LIFO only)
 - Cannot redo after rollback
+- Must have sufficient operations in stack
 
 ---
 

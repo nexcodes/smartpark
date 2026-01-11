@@ -31,14 +31,40 @@ Complete guide for using the SmartPark Parking System.
 
 3. No dependencies needed - uses Python standard library only!
 
-### Running the Demo
+### Running the Interactive System
 
 ```bash
 cd src
 python main.py
 ```
 
-This runs comprehensive demonstrations of all features.
+This launches an **interactive menu-driven interface** with the following sections:
+
+**Setup Operations:**
+- Add Zone
+- Add Parking Area to Zone
+- Link Adjacent Zones
+- Register Vehicle
+
+**Parking Operations:**
+- Create Parking Request
+- Allocate Parking
+- Mark Parking as Occupied
+- Release Parking
+- Cancel Parking Request
+
+**Query Operations:**
+- View System Status
+- View Zone Status
+- View Request Details
+- View All Zones
+- View All Vehicles
+
+**Advanced Operations:**
+- Rollback Operations
+- View Operation History
+
+The system provides immediate feedback and validation for each operation.
 
 ---
 
@@ -103,9 +129,17 @@ ZONE-A ←→ ZONE-B ←→ ZONE-C
 
 ```python
 # Register vehicles with their preferred zones
-system.register_vehicle("CAR-001", preferred_zone="ZONE-A")
-system.register_vehicle("CAR-002", preferred_zone="ZONE-B")
-system.register_vehicle("CAR-003", preferred_zone="ZONE-A")
+result = system.register_vehicle("CAR-001", preferred_zone="ZONE-A")
+if result['success']:
+    print(result['message'])
+
+result = system.register_vehicle("CAR-002", preferred_zone="ZONE-B")
+if result['success']:
+    print(result['message'])
+
+result = system.register_vehicle("CAR-003", preferred_zone="ZONE-A")
+if result['success']:
+    print(result['message'])
 ```
 
 ---
@@ -119,6 +153,7 @@ result = system.create_parking_request("CAR-001", "ZONE-A")
 if result['success']:
     request_id = result['request_id']
     print(f"Request created: {request_id}")
+    print(f"State: {result['state']}")  # Will show "REQUESTED"
 else:
     print(f"Failed: {result['message']}")
 ```
@@ -152,10 +187,10 @@ else:
 
 ```python
 # Vehicle has parked, mark slot as occupied
-result = system.mark_occupied(request_id)
+result = system.mark_parking_occupied(request_id)
 
 if result['success']:
-    print("✓ Vehicle marked as parked")
+    print(f"✓ {result['message']}")
 ```
 
 ---
@@ -167,8 +202,7 @@ if result['success']:
 result = system.release_parking(request_id)
 
 if result['success']:
-    print(f"✓ Slot released: {result['slot_id']}")
-    print(f"  Duration: {result['duration']:.0f} seconds")
+    print(f"✓ {result['message']}")
 ```
 
 ---
@@ -181,12 +215,13 @@ if result['success']:
 # Get detailed zone information
 status = system.get_zone_status("ZONE-A")
 
-print(f"Zone: {status['zone_id']}")
-print(f"Total Capacity: {status['total_capacity']}")
-print(f"Available: {status['available']}")
-print(f"Occupied: {status['occupied']}")
-print(f"Occupancy Rate: {status['occupancy_rate']:.1f}%")
-print(f"Adjacent Zones: {', '.join(status['adjacent_zones'])}")
+if status:
+    print(f"Zone: {status['zone_id']}")
+    print(f"Total Capacity: {status['total_capacity']}")
+    print(f"Available: {status['available']}")
+    print(f"Occupied: {status['occupied']}")
+    print(f"Number of Areas: {status['areas']}")
+    print(f"Adjacent Zones: {', '.join(status['adjacent_zones'])}")
 ```
 
 **Example Output:**
@@ -195,66 +230,46 @@ Zone: ZONE-A
 Total Capacity: 20
 Available: 12
 Occupied: 8
-Occupancy Rate: 40.0%
+Number of Areas: 2
 Adjacent Zones: ZONE-B
 ```
 
 ---
 
-### View All Zones
+### Check Request Details
 
 ```python
-zones = system.list_all_zones()
+request = system.get_request_by_id(request_id)
 
-for zone in zones:
-    print(f"{zone['zone_id']}: {zone['available']}/{zone['total_capacity']} available")
-```
-
-**Example Output:**
-```
-ZONE-A: 12/20 available
-ZONE-B: 15/15 available
-ZONE-C: 8/8 available
-```
-
----
-
-### Check Request Status
-
-```python
-status = system.get_request_status(request_id)
-
-print(f"Request: {status['request_id']}")
-print(f"Vehicle: {status['vehicle_id']}")
-print(f"State: {status['state']}")
-print(f"Requested Zone: {status['requested_zone']}")
-
-if status['allocated_zone']:
-    print(f"Allocated Zone: {status['allocated_zone']}")
-    print(f"Slot: {status['allocated_slot_id']}")
+if request:
+    print(f"Request: {request.request_id}")
+    print(f"Vehicle: {request.vehicle_id}")
+    print(f"State: {request.current_state.value}")
+    print(f"Requested Zone: {request.requested_zone}")
+    print(f"Timestamp: {request.timestamp}")
     
-if status['is_cross_zone']:
-    print("⚠ Cross-zone allocation")
-
-if status['duration']:
-    print(f"Duration: {status['duration']:.0f} seconds")
+    if request.allocated_zone:
+        print(f"Allocated Zone: {request.allocated_zone}")
+        print(f"Slot: {request.allocated_slot_id}")
+        
+        if request.allocated_zone != request.requested_zone:
+            print("⚠ Cross-zone allocation")
 ```
 
 ---
 
-### System Summary
+### System Status
 
 ```python
-summary = system.get_system_summary()
+status = system.get_system_status()
 
-print(f"Total Zones: {summary['total_zones']}")
-print(f"Total Slots: {summary['total_slots']}")
-print(f"Available: {summary['available_slots']}")
-print(f"Occupied: {summary['occupied_slots']}")
-print(f"Occupancy Rate: {summary['overall_occupancy_rate']:.1f}%")
-print(f"Total Requests: {summary['total_requests']}")
-print(f"Active Requests: {summary['active_requests']}")
-print(f"Registered Vehicles: {summary['registered_vehicles']}")
+print(f"Total Zones: {status['total_zones']}")
+print(f"Total Slots: {status['total_slots']}")
+print(f"Available: {status['available_slots']}")
+print(f"Occupied: {status['occupied_slots']}")
+print(f"Total Requests: {status['total_requests']}")
+print(f"Active Requests: {status['active_requests']}")
+print(f"Operations in History: {status['operations_in_history']}")
 ```
 
 ---
@@ -264,11 +279,13 @@ print(f"Registered Vehicles: {summary['registered_vehicles']}")
 You can cancel a request at any stage (except RELEASED).
 
 ```python
-# Cancel before allocation
-result = system.cancel_request(request_id)
+# Cancel a request
+result = system.cancel_parking_request(request_id)
 
 if result['success']:
-    print(f"✓ Request cancelled (was in {result['previous_state']} state)")
+    print(f"✓ {result['message']}")
+else:
+    print(f"✗ {result['message']}")
 ```
 
 **When to Cancel:**
@@ -280,27 +297,29 @@ if result['success']:
 
 ### Rollback Operations
 
-Undo the last operation:
+Undo the last k operations:
 
 ```python
-rollback = system.rollback_last_operation()
+# Rollback last 2 operations
+rollback = system.rollback_operations(2)
 
 if rollback['success']:
-    print(f"✓ Rolled back: {rollback['operation_type']}")
-    print(f"  Request: {rollback['request_id']}")
+    print(f"✓ {rollback['message']}")
+    for op in rollback['rolled_back']:
+        print(f"  - {op['operation']} on {op['request_id']}")
 else:
     print(f"✗ Rollback failed: {rollback['message']}")
 ```
 
 **What Can Be Rolled Back:**
-- Last allocation
-- Last cancellation
-- Last release
+- Allocations
+- Cancellations
+- Releases
 
 **Limitations:**
-- Only undoes LAST operation
-- Cannot undo multiple operations
+- Undoes k most recent operations from stack
 - Cannot redo after rollback
+- Order matters - LIFO (Last In, First Out)
 
 ---
 
