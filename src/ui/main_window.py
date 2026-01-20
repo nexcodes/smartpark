@@ -7,6 +7,7 @@ from tkinter import ttk
 from ui.dashboard_screen import DashboardScreen
 from ui.request_screen import RequestScreen
 from ui.setup_screen import SetupScreen
+from ui.status_screen import StatusScreen
 
 
 class MainWindow:
@@ -75,10 +76,12 @@ class MainWindow:
         # Store reference
         self.request_screen = request_frame
         
-        # Allocation Status Tab
-        status_frame = tk.Frame(self.notebook)
+        # Allocation Status Tab - Fully integrated
+        status_frame = StatusScreen(self.notebook, self.parking_system)
         self.notebook.add(status_frame, text="📍 Allocation Status")
-        self.create_placeholder(status_frame, "Allocation Status Screen")
+        
+        # Store reference
+        self.status_screen = status_frame
         
         # Rollback Tab
         rollback_frame = tk.Frame(self.notebook)
@@ -98,13 +101,16 @@ class MainWindow:
             tab_index = self.notebook.index(selected_tab)
             
             # Refresh appropriate screen based on tab index
-            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, etc.
+            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, Tab 3: Status, etc.
             if tab_index == 1 and hasattr(self, 'dashboard'):
                 # Refresh dashboard
                 self.dashboard.refresh_stats()
             elif tab_index == 2 and hasattr(self, 'request_screen'):
                 # Refresh request screen zone list
                 self.request_screen.on_tab_selected()
+            elif tab_index == 3 and hasattr(self, 'status_screen'):
+                # Refresh status screen
+                self.status_screen.on_tab_selected()
         except Exception as e:
             print(f"Error in tab change: {e}")
     
