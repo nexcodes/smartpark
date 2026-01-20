@@ -8,6 +8,7 @@ from ui.dashboard_screen import DashboardScreen
 from ui.request_screen import RequestScreen
 from ui.setup_screen import SetupScreen
 from ui.status_screen import StatusScreen
+from ui.rollback_screen import RollbackScreen
 
 
 class MainWindow:
@@ -83,10 +84,12 @@ class MainWindow:
         # Store reference
         self.status_screen = status_frame
         
-        # Rollback Tab
-        rollback_frame = tk.Frame(self.notebook)
+        # Rollback Tab - Fully integrated
+        rollback_frame = RollbackScreen(self.notebook, self.parking_system)
         self.notebook.add(rollback_frame, text="↩️ Rollback")
-        self.create_placeholder(rollback_frame, "Cancellation & Rollback Screen")
+        
+        # Store reference
+        self.rollback_screen = rollback_frame
         
         # Analytics Tab
         analytics_frame = tk.Frame(self.notebook)
@@ -101,7 +104,7 @@ class MainWindow:
             tab_index = self.notebook.index(selected_tab)
             
             # Refresh appropriate screen based on tab index
-            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, Tab 3: Status, etc.
+            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, Tab 3: Status, Tab 4: Rollback, etc.
             if tab_index == 1 and hasattr(self, 'dashboard'):
                 # Refresh dashboard
                 self.dashboard.refresh_stats()
@@ -111,6 +114,9 @@ class MainWindow:
             elif tab_index == 3 and hasattr(self, 'status_screen'):
                 # Refresh status screen
                 self.status_screen.on_tab_selected()
+            elif tab_index == 4 and hasattr(self, 'rollback_screen'):
+                # Refresh rollback screen
+                self.rollback_screen.on_tab_selected()
         except Exception as e:
             print(f"Error in tab change: {e}")
     
