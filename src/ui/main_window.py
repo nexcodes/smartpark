@@ -4,6 +4,7 @@ Manages navigation between different screens
 """
 import tkinter as tk
 from tkinter import ttk
+from ui.dashboard_screen import DashboardScreen
 
 
 class MainWindow:
@@ -48,10 +49,12 @@ class MainWindow:
     
     def setup_tabs(self):
         """Create all tabs for different screens"""
-        # Dashboard Tab
-        dashboard_frame = tk.Frame(self.notebook)
+        # Dashboard Tab - Fully integrated
+        dashboard_frame = DashboardScreen(self.notebook, self.parking_system)
         self.notebook.add(dashboard_frame, text="📊 Dashboard")
-        self.create_placeholder(dashboard_frame, "Main Dashboard")
+        
+        # Store reference for refreshing
+        self.dashboard = dashboard_frame
         
         # Parking Request Tab
         request_frame = tk.Frame(self.notebook)
