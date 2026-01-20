@@ -30,9 +30,10 @@ A sophisticated smart parking allocation and management system built with Python
 - **Penalty System**: Automatic penalty calculation for cross-zone allocations
   - Adjacent zone: 50 penalty points
   - Distant zone: 100 penalty points
-- **State Machine**: Robust request lifecycle management
+- **State Machine**: Robust request lifecycle management with validated transitions
 - **Rollback Support**: Stack-based rollback for undoing operations
 - **Real-time Monitoring**: Zone occupancy tracking and analytics
+- **Dual Interface**: Complete CLI and GUI implementations sharing the same backend
 
 ### Advanced Features
 - **Adjacency Graph**: Custom graph implementation for zone relationships
@@ -45,7 +46,7 @@ A sophisticated smart parking allocation and management system built with Python
   - Request statistics by state
   - Peak usage zone identification
   - Cross-zone allocation tracking
-  - Comprehensive analytics summary
+  - Export analytics to text files
 
 ---
 
@@ -131,19 +132,37 @@ A sophisticated smart parking allocation and management system built with Python
 
 ### Running the System
 
+#### CLI Interface (Menu-Driven)
 ```bash
 cd src
 python main.py
 ```
 
 This launches an **interactive menu-driven interface** with 23 operations:
-- **Setup Operations** (3): Add zones, parking areas, and link adjacent zones
+- **Setup Operations** (4): Add zones, parking areas, link adjacent zones, and register vehicles
 - **Parking Operations** (5): Create requests, allocate, occupy, release, and cancel
 - **Query Operations** (5): View system status, zone status, request details, zones, and vehicles
 - **Analytics** (6): Comprehensive metrics including duration, utilization, statistics, and trends
 - **Advanced Operations** (2): Rollback operations and view operation history
+- **System Operations** (1): Exit the system
 
-The system provides real-time feedback and guides you through each operation with input validation and error handling.
+The CLI provides real-time feedback with emoji indicators (✅, ❌, ℹ️) and comprehensive input validation.
+
+#### GUI Interface (Tkinter Application)
+```bash
+cd src
+python gui_main.py
+```
+
+This launches a **windowed application** with 6 tabs:
+- **Setup**: Configure zones, areas, adjacency, and vehicles
+- **Dashboard**: View system overview with real-time statistics
+- **Request**: Create and manage parking requests
+- **Status**: Monitor zones, vehicles, and request details
+- **Rollback**: Undo operations and view operation history
+- **Analytics**: View metrics and export analytics reports
+
+The GUI provides visual feedback, color-coded status indicators, and intuitive forms for all operations.
 
 ---
 
@@ -308,27 +327,40 @@ All state transitions are validated. Invalid transitions are rejected automatica
 py_project/
 ├── src/
 │   ├── __init__.py                 # Package initializer
-│   ├── main.py                     # Interactive menu system
+│   ├── main.py                     # CLI interface (23 menu operations)
+│   ├── gui_main.py                 # GUI entry point
 │   ├── parking_system.py           # Main controller
 │   ├── allocation_engine.py        # Slot allocation logic
-│   ├── rollback_manager.py         # Rollback operations
-│   ├── analytics.py                # Analytics engine
-│   ├── zone.py                     # Zone class
-│   ├── parking_area.py             # Parking area class
+│   ├── rollback_manager.py         # Stack-based rollback operations
+│   ├── analytics.py                # Analytics engine with 6 metrics
+│   ├── zone.py                     # Zone class with adjacency graph
+│   ├── parking_area.py             # Parking area class (array container)
 │   ├── parking_slot.py             # Individual slot class
 │   ├── vehicle.py                  # Vehicle class
 │   ├── parking_request.py          # Request with state machine
-│   └── enums.py                    # Enumerations & constants
+│   ├── enums.py                    # Enumerations & constants
+│   └── ui/                         # GUI components (Tkinter)
+│       ├── __init__.py             # UI package initializer
+│       ├── main_window.py          # Main application window
+│       ├── setup_screen.py         # Setup tab
+│       ├── dashboard_screen.py     # Dashboard tab
+│       ├── request_screen.py       # Request management tab
+│       ├── status_screen.py        # Status monitoring tab
+│       ├── rollback_screen.py      # Rollback operations tab
+│       ├── analytics_screen.py     # Analytics & reports tab
+│       └── theme.py                # UI theming constants
 ├── docs/
-│   ├── API_REFERENCE.md            # Complete API docs
-│   ├── ARCHITECTURE.md             # System design
+│   ├── API.md                      # Complete API documentation
+│   ├── ARCHITECTURE.md             # System design & algorithms
 │   ├── DSA_CONCEPTS.md             # Data structures explained
 │   ├── QUICK_START.md              # Getting started guide
-│   ├── USER_GUIDE.md               # User manual
-│   ├── DOCUMENTATION_UPDATES.md    # Update log
+│   ├── USER_GUIDE.md               # User manual with examples
+│   ├── UI.md                       # Interface documentation (CLI & GUI)
 │   └── README.md                   # Documentation index
 ├── planning/
 │   └── roadmap.md                  # Development roadmap
+├── exports/
+│   └── summary/                    # Analytics export directory
 ├── .gitignore                      # Git ignore rules
 └── readme.md                       # This file
 ```
@@ -366,24 +398,43 @@ User requests ZONE-A parking:
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Usage
 
-Run the main demo to see comprehensive test cases:
+### CLI Testing
+Run the interactive menu to test all features:
 
 ```bash
-python src/main.py
+cd src
+python main.py
+```
+
+### GUI Testing
+Run the graphical interface to visually test the system:
+
+```bash
+cd src
+python gui_main.py
 ```
 
 ### Test Coverage
 
-- ✅ Same-zone allocation
-- ✅ Cross-zone allocation (adjacent)
-- ✅ Cross-zone allocation (distant)
+**Allocation Logic:**
+- ✅ Same-zone allocation (0 penalty)
+- ✅ Cross-zone allocation - adjacent (50 penalty)
+- ✅ Cross-zone allocation - distant (100 penalty)
+- ✅ Allocation failure (no available slots)
+
+**State Management:**
+- ✅ Request lifecycle (REQUESTED → ALLOCATED → OCCUPIED → RELEASED)
 - ✅ Request cancellation at various states
-- ✅ Rollback operations
 - ✅ State transition validation
+- ✅ Invalid state transition rejection
+
+**Advanced Features:**
+- ✅ Rollback operations (stack-based undo)
 - ✅ Zone capacity management
-- ✅ Edge cases (full capacity, invalid requests)
+- ✅ Analytics calculations (6 different metrics)
+- ✅ Edge cases (full capacity, invalid requests, duplicate IDs)
 
 ---
 
@@ -402,18 +453,41 @@ This project demonstrates:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Areas for enhancement:
+Contributions are welcome! Please follow these guidelines:
 
-- [ ] Implement GUI using Tkinter
+### Completed Features ✅
+- ✅ GUI using Tkinter (6-tab interface)
+- ✅ Export analytics to text files
+- ✅ Dual interface support (CLI & GUI)
+- ✅ Comprehensive state machine validation
+- ✅ Stack-based rollback system
+
+### Areas for Enhancement
+
+**High Priority:**
 - [ ] Add priority queue for VIP requests
-- [ ] Add pricing/payment system
-- [ ] Database persistence (SQLite)
-- [ ] RESTful API layer
 - [ ] Unit test coverage with pytest
+- [ ] Database persistence (SQLite)
+- [ ] Export analytics to CSV/JSON formats
+
+**Medium Priority:**
+- [ ] Add pricing/payment system
 - [ ] Performance optimization for large-scale scenarios
-- [ ] Export analytics to CSV/JSON
-- [ ] Real-time notifications
+- [ ] Real-time notifications for slot availability
+- [ ] Reservation system with time slots
+
+**Future Enhancements:**
+- [ ] RESTful API layer
 - [ ] Multi-tenant support
+- [ ] Mobile-responsive web interface
+- [ ] Heat map visualization for zone usage
+
+### Contributing Process
+1. Check `planning/roadmap.md` for planned features
+2. Review `docs/ARCHITECTURE.md` to understand system design
+3. Follow DSA implementation patterns from `docs/DSA_CONCEPTS.md`
+4. Ensure both CLI and GUI interfaces are updated for new features
+5. Update relevant documentation in `docs/`
 
 ---
 
@@ -431,12 +505,21 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## 📞 Support
+## 📞 Support & Documentation
 
-For questions or issues:
-- Open an issue on GitHub
-- Check documentation in `docs/` folder
-- Review the roadmap in `planning/roadmap.md`
+### Quick Access
+- **Getting Started**: See [docs/QUICK_START.md](docs/QUICK_START.md)
+- **API Reference**: See [docs/API.md](docs/API.md)
+- **Architecture Details**: See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **DSA Concepts**: See [docs/DSA_CONCEPTS.md](docs/DSA_CONCEPTS.md)
+- **User Guide**: See [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
+- **Interface Guide**: See [docs/UI.md](docs/UI.md)
+- **Development Roadmap**: See [planning/roadmap.md](planning/roadmap.md)
+
+### Getting Help
+- Check comprehensive documentation in `docs/` folder
+- Review code examples in `docs/QUICK_START.md`
+- Examine the interactive demos in both CLI and GUI
 
 ---
 

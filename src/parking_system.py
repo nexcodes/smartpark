@@ -241,7 +241,13 @@ class ParkingSystem:
         
         request = self.requests[request_id]
         
+        # Store previous state for rollback
+        previous_state = request.current_state
+        
         if request.change_state(RequestState.OCCUPIED):
+            # Record operation for rollback
+            self.rollback_manager.record_occupied(request, previous_state)
+            
             return {
                 'success': True,
                 'message': 'Parking marked as occupied'

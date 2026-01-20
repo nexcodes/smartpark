@@ -61,6 +61,26 @@ class RollbackManager:
         )
         self.operation_stack.append(operation)
     
+    def record_occupied(self, request, previous_state):
+        """
+        Record a mark as occupied operation for potential rollback
+        
+        Args:
+            request: ParkingRequest that was marked as occupied
+            previous_state: State before marking as occupied (should be ALLOCATED)
+        """
+        operation = Operation(
+            operation_type='OCCUPY',
+            slot_id=request.allocated_slot_id,
+            slot_previous_availability=None,  # Not changing slot availability
+            slot_previous_vehicle_id=None,
+            request_id=request.request_id,
+            request_previous_state=previous_state,
+            request_previous_allocated_slot=request.allocated_slot_id,
+            request_previous_allocated_zone=request.allocated_zone
+        )
+        self.operation_stack.append(operation)
+    
     def record_cancellation(self, slot, request, previous_state):
         """
         Record a cancellation operation for potential rollback
@@ -131,18 +151,21 @@ class RollbackManager:
             return {
                 'success': False,
                 'message': 'k must be positive',
-                'rolled_back': []
+                'rolled_back': [],
+                'operations_rolled_back': 0
             }
         
         if k > len(self.operation_stack):
             return {
                 'success': False,
                 'message': f'Cannot rollback {k} operations - only {len(self.operation_stack)} in history',
-                'rolled_back': []
+                'rolled_back': [],
+                'operations_rolled_back': 0
             }
         
         rolled_back = []
         skipped = []
+        requests_to_remove = set()
         
         for _ in range(k):
             if not self.operation_stack:
@@ -159,9 +182,14 @@ class RollbackManager:
             
             # Rollback based on operation type
             if operation.operation_type == 'ALLOCATE':
+                # If rolling back to REQUESTED with no prior allocation, mark for removal
+                if operation.request_previous_state == RequestState.REQUESTED and not operation.request_previous_allocated_slot:
+                    requests_to_remove.add(operation.request_id)
                 self._rollback_allocation(operation, zones, request)
             elif operation.operation_type == 'CANCEL':
                 self._rollback_cancellation(operation, zones, request)
+            elif operation.operation_type == 'OCCUPY':
+                self._rollback_occupy(operation, request)
             elif operation.operation_type == 'RELEASE':
                 self._rollback_release(operation, zones, request)
             
@@ -171,11 +199,18 @@ class RollbackManager:
                 'slot_id': operation.slot_id
             })
         
+        # Remove requests that should be deleted
+        for request_id in requests_to_remove:
+            if request_id in requests_dict:
+                del requests_dict[request_id]
+                print(f"Removed request {request_id} during rollback")
+        
         return {
             'success': True,
             'message': f'Successfully rolled back {len(rolled_back)} operations',
             'rolled_back': rolled_back,
-            'skipped': skipped
+            'skipped': skipped,
+            'operations_rolled_back': len(rolled_back)
         }
     
     def _rollback_allocation(self, operation, zones, request):
@@ -205,6 +240,11 @@ class RollbackManager:
         request.current_state = operation.request_previous_state
         request.allocated_slot_id = operation.request_previous_allocated_slot
         request.allocated_zone = operation.request_previous_allocated_zone
+    
+    def _rollback_occupy(self, operation, request):
+        """Rollback a mark as occupied operation"""
+        # Restore request state back to ALLOCATED
+        request.current_state = operation.request_previous_state
     
     def _rollback_release(self, operation, zones, request):
         """Rollback a release operation"""

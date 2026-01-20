@@ -8,11 +8,12 @@ SmartPark is a **DSA-focused** parking management system demonstrating practical
 **Hierarchical Structure:** `ParkingSystem` → `Zone` (graph nodes) → `ParkingArea` (arrays) → `ParkingSlot`
 
 **Key Components:**
-- `parking_system.py` - Main orchestrator, holds all global state
+- `parking_system.py` - Main orchestrator, holds all global state (zones, vehicles, requests)
 - `allocation_engine.py` - Slot allocation with 3-tier priority (same-zone→adjacent→distant)
 - `rollback_manager.py` - Stack-based undo using LIFO operations
 - `zone.py` - Graph node with adjacency list for cross-zone navigation
 - `enums.py` - State machine with validated transitions (REQUESTED→ALLOCATED→OCCUPIED→RELEASED)
+- `analytics.py` - Metrics engine with array traversal patterns
 
 **Data Flow:**
 ```
@@ -65,8 +66,13 @@ if zone_id not in self.zones:
 
 ### Running the System
 ```bash
+# CLI Interface (23 menu operations)
 cd src
-python main.py  # Interactive CLI with 17 operations
+python main.py
+
+# GUI Interface (Tkinter, 6 tabs)
+cd src
+python gui_main.py
 ```
 
 ### Testing a Feature
@@ -81,7 +87,8 @@ system = ParkingSystem()
 1. Add method to `ParkingSystem` (returns dict)
 2. If modifies state, record in `RollbackManager`
 3. Add menu option in `main.py` with input validation
-4. Update `DOCUMENTATION_UPDATES.md` (if exists)
+4. For GUI: add to appropriate `ui/` screen with event handlers
+5. Update `DOCUMENTATION_UPDATES.md` (if exists)
 
 ## Critical Implementation Details
 
@@ -103,6 +110,15 @@ Each `Operation` stores:
 - Previous state of slot (availability, vehicle_id)
 - Previous state of request (state, allocated_slot, allocated_zone)
 - Rollback inverts: allocate→release, cancel→restore
+
+### Analytics Traversal
+Analytics methods use array iteration patterns:
+```python
+# Pattern: traverse all requests, filter by state, accumulate
+for request in self.parking_system.requests.values():
+    if request.current_state == RequestState.RELEASED:
+        total_duration += request.get_parking_duration()
+```
 
 ## Common Patterns
 
@@ -138,6 +154,20 @@ for adjacent_zone_id in requested_zone.adjacent_zones:
 - **Don't** bypass state validation - always use `is_valid_transition()`
 - **Don't** forget to record operations in rollback manager for reversible actions
 - **Don't** use binary search on unsorted/dynamic arrays (slots change availability)
+- **Don't** import Tkinter in non-GUI modules - keep `ui/` isolated
+
+## Dual Interface Architecture
+
+### CLI (`main.py`)
+- 23 menu operations organized in 6 categories
+- Verbose print output with emojis (✅, ❌, ℹ️)
+- Input validation with `.strip().upper()` for IDs
+
+### GUI (`gui_main.py` + `ui/`)
+- Tkinter notebook with 6 tabs: Setup, Dashboard, Request, Status, Rollback, Analytics
+- Shared backend: both interfaces use same `ParkingSystem` instance
+- Pattern: Screen classes inherit from `tk.Frame`, call `parking_system` methods
+- Key files: `main_window.py` (navigation), individual screens for each tab
 
 ## Documentation Structure
 
@@ -148,6 +178,6 @@ for adjacent_zone_id in requested_zone.adjacent_zones:
 
 ## Project Constraints
 
-- **Pure Python:** No external dependencies (educational requirement)
+- **Pure Python:** No external dependencies except Tkinter (standard library)
 - **DSA Focus:** Prioritize demonstrating concepts over production optimization
-- **CLI Only:** No web/GUI layer planned
+- **Dual Interface:** CLI and GUI both supported, share backend logic
