@@ -14,7 +14,12 @@ from ui.main_window import MainWindow
 
 def main():
     """Main entry point for GUI application"""
-    print("Starting SmartPark GUI...")
+    print("="*60)
+    print("SmartPark - Parking Management System")
+    print("="*60)
+    print("\nStarting GUI...")
+    print("Use the Setup tab to configure zones, areas, and vehicles")
+    print("="*60)
     
     # Initialize parking system
     parking_system = ParkingSystem()

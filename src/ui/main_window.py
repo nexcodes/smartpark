@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from ui.dashboard_screen import DashboardScreen
 from ui.request_screen import RequestScreen
+from ui.setup_screen import SetupScreen
 
 
 class MainWindow:
@@ -50,6 +51,13 @@ class MainWindow:
     
     def setup_tabs(self):
         """Create all tabs for different screens"""
+        # Setup Tab - System Configuration (First tab)
+        setup_frame = SetupScreen(self.notebook, self.parking_system)
+        self.notebook.add(setup_frame, text="⚙️ Setup")
+        
+        # Store reference
+        self.setup_screen = setup_frame
+        
         # Dashboard Tab - Fully integrated
         dashboard_frame = DashboardScreen(self.notebook, self.parking_system)
         self.notebook.add(dashboard_frame, text="📊 Dashboard")
