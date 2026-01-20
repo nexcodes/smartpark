@@ -71,18 +71,30 @@ class RequestScreen(tk.Frame):
         self.load_zones()
     
     def load_zones(self):
-        """Load available zones into combobox"""
-        # TODO: Get zones from parking_system
-        # For now, placeholder
-        self.zone_combobox['values'] = ['ZONE-A', 'ZONE-B', 'ZONE-C']
-        if self.zone_combobox['values']:
-            self.zone_combobox.current(0)
+        """Load available zones from parking system"""
+        try:
+            # Get zones from parking system
+            zone_ids = list(self.parking_system.zones.keys())
+            
+            if zone_ids:
+                self.zone_combobox['values'] = zone_ids
+                self.zone_combobox.current(0)
+            else:
+                self.zone_combobox['values'] = []
+                messagebox.showwarning(
+                    "No Zones",
+                    "No parking zones available. Please set up zones first."
+                )
+        except Exception as e:
+            print(f"Error loading zones: {e}")
+            messagebox.showerror("Error", "Failed to load parking zones")
     
     def on_request_parking(self):
         """Handle parking request submission"""
-        vehicle_id = self.vehicle_id_entry.get().strip()
+        vehicle_id = self.vehicle_id_entry.get().strip().upper()
         zone_id = self.zone_combobox.get()
         
+        # Validation
         if not vehicle_id:
             messagebox.showerror("Error", "Please enter a Vehicle ID")
             return
@@ -91,11 +103,67 @@ class RequestScreen(tk.Frame):
             messagebox.showerror("Error", "Please select a zone")
             return
         
-        # TODO: Call parking_system.create_request(vehicle_id, zone_id)
-        messagebox.showinfo(
-            "Success",
-            f"Parking request created for {vehicle_id} in {zone_id}"
-        )
-        
-        # Clear form
-        self.vehicle_id_entry.delete(0, tk.END)
+        try:
+            # Register vehicle if not already registered
+            if vehicle_id not in self.parking_system.vehicles:
+                vehicle_result = self.parking_system.register_vehicle(vehicle_id, zone_id)
+                if not vehicle_result['success']:
+                    messagebox.showerror("Error", vehicle_result['message'])
+                    return
+            
+            # Create parking request
+            request_result = self.parking_system.create_parking_request(vehicle_id, zone_id)
+            
+            if request_result['success']:
+                request_id = request_result['request_id']
+                
+                # Automatically try to allocate parking
+                allocation_result = self.parking_system.allocate_parking(request_id)
+                
+                if allocation_result['success']:
+                    slot_id = allocation_result['slot_id']
+                    penalty = allocation_result.get('penalty', 0)
+                    
+                    message = f"✓ Parking Allocated!\n\n"
+                    message += f"Request ID: {request_id}\n"
+                    message += f"Vehicle: {vehicle_id}\n"
+                    message += f"Slot: {slot_id}\n"
+                    message += f"Zone: {zone_id}\n"
+                    
+                    if penalty > 0:
+                        message += f"\nCross-zone penalty: {penalty}"
+                    
+                    messagebox.showinfo("Allocation Successful", message)
+                else:
+                    # Request created but allocation failed
+                    message = f"Request created but allocation failed:\n\n"
+                    message += f"Request ID: {request_id}\n"
+                    message += f"Reason: {allocation_result['message']}"
+                    messagebox.showwarning("Allocation Failed", message)
+                
+                # Clear form
+                self.vehicle_id_entry.delete(0, tk.END)
+                
+                # Refresh dashboard if it exists
+                self.refresh_parent_dashboard()
+            else:
+                messagebox.showerror("Error", request_result['message'])
+                
+        except Exception as e:
+            print(f"Error creating parking request: {e}")
+            import traceback
+            traceback.print_exc()
+            messagebox.showerror("Error", f"Failed to create parking request: {str(e)}")
+    
+    def refresh_parent_dashboard(self):
+        """Refresh the dashboard in the parent window if it exists"""
+        try:
+            # Navigate up to find the main window
+            parent = self.master
+            while parent:
+                if hasattr(parent, 'dashboard'):
+                    parent.dashboard.refresh_stats()
+                    break
+                parent = parent.master if hasattr(parent, 'master') else None
+        except Exception as e:
+            print(f"Could not refresh dashboard: {e}")

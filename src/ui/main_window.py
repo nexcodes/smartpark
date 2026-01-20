@@ -5,6 +5,7 @@ Manages navigation between different screens
 import tkinter as tk
 from tkinter import ttk
 from ui.dashboard_screen import DashboardScreen
+from ui.request_screen import RequestScreen
 
 
 class MainWindow:
@@ -56,10 +57,12 @@ class MainWindow:
         # Store reference for refreshing
         self.dashboard = dashboard_frame
         
-        # Parking Request Tab
-        request_frame = tk.Frame(self.notebook)
+        # Parking Request Tab - Fully integrated
+        request_frame = RequestScreen(self.notebook, self.parking_system)
         self.notebook.add(request_frame, text="🚗 New Request")
-        self.create_placeholder(request_frame, "Parking Request Screen")
+        
+        # Store reference
+        self.request_screen = request_frame
         
         # Allocation Status Tab
         status_frame = tk.Frame(self.notebook)
