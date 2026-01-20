@@ -9,6 +9,7 @@ from ui.request_screen import RequestScreen
 from ui.setup_screen import SetupScreen
 from ui.status_screen import StatusScreen
 from ui.rollback_screen import RollbackScreen
+from ui.analytics_screen import AnalyticsScreen
 
 
 class MainWindow:
@@ -91,10 +92,12 @@ class MainWindow:
         # Store reference
         self.rollback_screen = rollback_frame
         
-        # Analytics Tab
-        analytics_frame = tk.Frame(self.notebook)
+        # Analytics Tab - Fully integrated
+        analytics_frame = AnalyticsScreen(self.notebook, self.parking_system)
         self.notebook.add(analytics_frame, text="📈 Analytics")
-        self.create_placeholder(analytics_frame, "Analytics Screen")
+        
+        # Store reference
+        self.analytics_screen = analytics_frame
     
     def on_tab_changed(self, event):
         """Handle tab change events to refresh screen data"""
@@ -104,7 +107,7 @@ class MainWindow:
             tab_index = self.notebook.index(selected_tab)
             
             # Refresh appropriate screen based on tab index
-            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, Tab 3: Status, Tab 4: Rollback, etc.
+            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, Tab 3: Status, Tab 4: Rollback, Tab 5: Analytics
             if tab_index == 1 and hasattr(self, 'dashboard'):
                 # Refresh dashboard
                 self.dashboard.refresh_stats()
@@ -117,6 +120,9 @@ class MainWindow:
             elif tab_index == 4 and hasattr(self, 'rollback_screen'):
                 # Refresh rollback screen
                 self.rollback_screen.on_tab_selected()
+            elif tab_index == 5 and hasattr(self, 'analytics_screen'):
+                # Refresh analytics screen
+                self.analytics_screen.on_tab_selected()
         except Exception as e:
             print(f"Error in tab change: {e}")
     
