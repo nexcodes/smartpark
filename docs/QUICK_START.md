@@ -1,420 +1,313 @@
-# Quick Start Guide
+# SmartPark - Quick Start Guide
 
-Get up and running with SmartPark in 5 minutes!
+This guide will help you get SmartPark up and running in minutes.
 
----
+## Prerequisites
+
+- **Python 3.7+** (Python 3.8 or higher recommended)
+- **Tkinter** (usually pre-installed with Python on Windows/macOS; on Linux, install via package manager)
+
+### Verify Python Installation
+
+```bash
+python --version
+# or
+python3 --version
+```
+
+### Verify Tkinter Installation
+
+```bash
+python -m tkinter
+# A small window should appear. If it does, Tkinter is installed.
+```
+
+If Tkinter is not installed on Linux:
+```bash
+# Ubuntu/Debian
+sudo apt-get install python3-tk
+
+# Fedora
+sudo dnf install python3-tkinter
+
+# Arch Linux
+sudo pacman -S tk
+```
 
 ## Installation
 
-**Requirements:**
-- Python 3.8 or higher
-- No external dependencies needed!
+### 1. Clone/Download the Project
 
-**Setup:**
 ```bash
-# Clone the repository
+# Option 1: Clone from Git (if applicable)
 git clone <repository-url>
 cd py_project
 
-# Verify Python installation
-python --version
+# Option 2: Extract from ZIP
+# Simply extract the ZIP file and navigate to the folder
+cd py_project
 ```
 
----
+### 2. Verify Project Structure
 
-## Run the Interactive System
+Ensure you have the following structure:
+```
+py_project/
+├── src/
+│   ├── main.py              # CLI entry point
+│   ├── gui_main.py          # GUI entry point
+│   ├── parking_system.py    # Main system controller
+│   ├── allocation_engine.py
+│   ├── rollback_manager.py
+│   └── ui/                  # GUI screens
+├── docs/                    # Documentation
+├── exports/                 # Analytics exports
+└── readme.md
+```
+
+## Running the Application
+
+### Option 1: Graphical User Interface (GUI) - Recommended for Beginners
+
+Navigate to the `src` directory and run:
+
+```bash
+cd src
+python gui_main.py
+```
+
+**For Python 3 specifically:**
+```bash
+cd src
+python3 gui_main.py
+```
+
+The GUI window will open with the following tabs:
+- **Setup**: Configure zones, areas, and vehicles
+- **Dashboard**: View system overview
+- **New Request**: Create parking requests
+- **Allocation Status**: View request details
+- **Rollback**: Undo operations
+- **Analytics**: View statistics and metrics
+
+### Option 2: Command-Line Interface (CLI) - For Advanced Users
+
+Navigate to the `src` directory and run:
 
 ```bash
 cd src
 python main.py
 ```
 
-**What You'll See:**
-- An interactive menu with 17+ options
-- Setup operations (add zones, areas, link zones)
-- Parking operations (register, request, allocate, release)
-- Query operations (view status, requests, zones)
-- Advanced features (rollback, operation history)
-
-The system provides real-time feedback and validation for each operation.
-
----
-
-## Your First Parking System (5 Minutes)
-
-### Step 1: Create a Simple System (1 minute)
-
-Create a new file `my_parking.py`:
-
-```python
-from parking_system import ParkingSystem
-
-# Initialize system
-system = ParkingSystem()
-
-# Create a zone with 10 parking slots
-system.add_zone("MAIN-ZONE")
-system.add_parking_area_to_zone("MAIN-ZONE", "AREA-1", capacity=10)
-
-print("✓ Parking system created with 10 slots")
-```
-
-Run it:
-```bash
-python my_parking.py
-```
-
----
-
-### Step 2: Register a Vehicle and Park (2 minutes)
-
-Add to `my_parking.py`:
-
-```python
-# Register your vehicle
-result = system.register_vehicle("MY-CAR", preferred_zone="MAIN-ZONE")
-print(f"✓ {result['message']}")
-
-# Request parking
-result = system.create_parking_request("MY-CAR", "MAIN-ZONE")
-request_id = result['request_id']
-print(f"✓ Request created: {request_id}, State: {result['state']}")
-
-# Allocate a slot
-allocation = system.allocate_parking(request_id)
-if allocation['success']:
-    print(f"✓ Allocated slot: {allocation['slot_id']}")
-    print(f"  Zone: {allocation['zone_id']}")
-    print(f"  Penalty: {allocation['penalty']}")
-```
-
----
-
-### Step 3: Complete the Parking Cycle (2 minutes)
-
-Add to `my_parking.py`:
-
-```python
-# Mark as occupied (vehicle has parked)
-result = system.mark_parking_occupied(request_id)
-print(f"✓ {result['message']}")
-
-# Check system status
-system_status = system.get_system_status()
-print(f"✓ System: {system_status['occupied_slots']}/{system_status['total_slots']} occupied")
-
-# Check zone status
-zone_status = system.get_zone_status("MAIN-ZONE")
-print(f"✓ Zone status: {zone_status['occupied']}/{zone_status['total_capacity']} occupied")
-
-# Release parking (vehicle leaves)
-release = system.release_parking(request_id)
-if release['success']:
-    print(f"✓ {release['message']}")
-
-# Check zone status again
-status = system.get_zone_status("MAIN-ZONE")
-print(f"✓ Zone status: {status['occupied']}/{status['total_capacity']} occupied")
-```
-
-**Complete Code:**
-
-```python
-from parking_system import ParkingSystem
-
-# Initialize
-system = ParkingSystem()
-system.add_zone("MAIN-ZONE")
-system.add_parking_area_to_zone("MAIN-ZONE", "AREA-1", capacity=10)
-
-# Register and park
-system.register_vehicle("MY-CAR", "MAIN-ZONE")
-result = system.create_parking_request("MY-CAR", "MAIN-ZONE")
-request_id = result['request_id']
-
-allocation = system.allocate_parking(request_id)
-print(f"Allocated: {allocation['slot_id']}, Penalty: {allocation['penalty']}")
-
-system.mark_occupied(request_id)
-print("Vehicle parked!")
-
-# Later... release
-release = system.release_parking(request_id)
-print(f"Vehicle left after {release['duration']:.0f} seconds")
-```
-
----
-
-## Understanding Cross-Zone Allocation
-
-### Setup Multiple Zones
-
-```python
-from parking_system import ParkingSystem
-
-system = ParkingSystem()
-
-# Create three zones
-system.add_zone("ZONE-A")
-system.add_zone("ZONE-B")
-system.add_zone("ZONE-C")
-
-# Add parking areas (ZONE-A has only 2 slots)
-system.add_parking_area_to_zone("ZONE-A", "A1", capacity=2)
-system.add_parking_area_to_zone("ZONE-B", "B1", capacity=10)
-system.add_parking_area_to_zone("ZONE-C", "C1", capacity=10)
-
-# Link zones (A adjacent to B, B adjacent to C)
-system.link_adjacent_zones("ZONE-A", "ZONE-B")
-system.link_adjacent_zones("ZONE-B", "ZONE-C")
-```
-
-### Test Cross-Zone Allocation
-
-```python
-# Fill up ZONE-A completely
-for i in range(2):
-    system.register_vehicle(f"FILLER-{i}", "ZONE-A")
-    req = system.create_parking_request(f"FILLER-{i}", "ZONE-A")
-    system.allocate_parking(req['request_id'])
-
-print("ZONE-A is now full (2/2 occupied)")
-
-# Try to park in ZONE-A (will get ZONE-B with penalty)
-system.register_vehicle("LATE-CAR", "ZONE-A")
-req = system.create_parking_request("LATE-CAR", "ZONE-A")
-allocation = system.allocate_parking(req['request_id'])
-
-print(f"Requested: ZONE-A")
-print(f"Allocated: {allocation['zone_id']}")
-print(f"Penalty: {allocation['penalty']}")
-# Output: Allocated: ZONE-B, Penalty: 50 (adjacent zone)
-```
-
----
-
-## Common Patterns
-
-### Pattern 1: Check Before Allocate
-
-```python
-# Good practice: Check zone availability first
-status = system.get_zone_status("ZONE-A")
-if status and status['available'] > 0:
-    # Allocate in preferred zone
-    req = system.create_parking_request(vehicle_id, "ZONE-A")
-    system.allocate_parking(req['request_id'])
-else:
-    print("ZONE-A is full. Consider adjacent zones.")
-    # You can check adjacent zones from status['adjacent_zones']
-    for adj_zone in status['adjacent_zones']:
-        adj_status = system.get_zone_status(adj_zone)
-        if adj_status and adj_status['available'] > 0:
-            print(f"{adj_zone} has {adj_status['available']} slots available")
-```
-
----
-
-### Pattern 2: Batch Registration
-
-```python
-# Register multiple vehicles at once
-vehicles = [
-    ("CAR-001", "ZONE-A"),
-    ("CAR-002", "ZONE-A"),
-    ("CAR-003", "ZONE-B"),
-]
-
-for vehicle_id, preferred_zone in vehicles:
-    system.register_vehicle(vehicle_id, preferred_zone)
-    print(f"✓ Registered {vehicle_id}")
-```
-
----
-
-### Pattern 3: Monitor Occupancy
-
-```python
-def print_system_status(system):
-    status = system.get_system_status()
-    print("\n=== System Status ===")
-    print(f"Total Slots: {status['total_slots']}")
-    print(f"Available: {status['available_slots']}")
-    print(f"Occupied: {status['occupied_slots']}")
-    # Compute occupancy rate safely
-    occupancy_rate = (status['occupied_slots'] / status['total_slots'] * 100) if status['total_slots'] > 0 else 0.0
-    print(f"Occupancy: {occupancy_rate:.1f}%")
-    print(f"Active Requests: {status['active_requests']}")
-    print()
-
-# Use it
-print_system_status(system)
-```
-
----
-
-### Pattern 4: Error Handling
-
-```python
-def safe_parking_request(system, vehicle_id, zone_id):
-    """Safely create and allocate parking request"""
-    
-    # Check vehicle registered
-    if not system.get_vehicle(vehicle_id):
-        return {'success': False, 'message': 'Vehicle not registered'}
-    
-    # Create request
-    req_result = system.create_parking_request(vehicle_id, zone_id)
-    if not req_result['success']:
-        return req_result
-    
-    # Allocate
-    alloc_result = system.allocate_parking(req_result['request_id'])
-    return alloc_result
-
-# Use it
-result = safe_parking_request(system, "CAR-001", "ZONE-A")
-if result['success']:
-    print(f"Success: {result['slot_id']}")
-else:
-    print(f"Failed: {result['message']}")
-```
-
----
-
-## Next Steps
-
-1. **Read Full Documentation:**
-   - [USER_GUIDE.md](USER_GUIDE.md) - Comprehensive usage guide
-   - [API_REFERENCE.md](API_REFERENCE.md) - Complete API documentation
-   - [ARCHITECTURE.md](ARCHITECTURE.md) - System design details
-   - [DSA_CONCEPTS.md](DSA_CONCEPTS.md) - Data structures explained
-
-2. **Explore Examples:**
-   - Check [../src/main.py](../src/main.py) for advanced examples
-   - See demo outputs for expected behavior
-
-3. **Extend the System:**
-   - Add GUI using Tkinter
-   - Implement payment system
-   - Add priority queues for VIP
-   - Create RESTful API
-
-4. **Learn DSA:**
-   - Study the data structures used
-   - Analyze algorithm complexities
-   - Understand design decisions
-
----
-
-## Quick Reference
-
-### Essential Commands
-
-```python
-# Setup
-system = ParkingSystem()
-system.add_zone("ZONE-A")
-system.add_parking_area_to_zone("ZONE-A", "A1", 10)
-
-# Vehicle Operations
-system.register_vehicle("CAR-001", "ZONE-A")
-
-# Parking Flow
-req = system.create_parking_request("CAR-001", "ZONE-A")
-alloc = system.allocate_parking(req['request_id'])
-system.mark_occupied(req['request_id'])
-system.release_parking(req['request_id'])
-
-# Monitoring
-system.get_zone_status("ZONE-A")
-system.get_system_status()
-
-# Advanced
-system.cancel_parking_request(request_id)
-system.rollback_operations(1)  # Rollback last operation
-```
-
----
-
-## Using the Interactive Menu (Alternative)
-
-Instead of writing code, you can use the built-in interactive menu:
-
+**For Python 3 specifically:**
 ```bash
 cd src
-python main.py
+python3 main.py
 ```
 
-**Menu Flow Example:**
+The CLI presents a menu-driven interface with 23 operations organized into categories:
+- Setup Operations
+- Parking Operations
+- Query Operations
+- Analytics
+- Advanced Operations
 
-1. **Add a zone:**
-   - Select option `1` (Add Zone)
-   - Enter Zone ID: `ZONE-A`
+## First-Time Setup Workflow
 
-2. **Add parking area:**
-   - Select option `2` (Add Parking Area to Zone)
-   - Enter Zone ID: `ZONE-A`
-   - Enter Area ID: `A1`
-   - Enter capacity: `10`
+### Using GUI (Recommended)
 
-3. **Register vehicle:**
-   - Select option `4` (Register Vehicle)
-   - Enter Vehicle ID: `CAR-001`
-   - Enter preferred zone: `ZONE-A`
+1. **Start the GUI:**
+   ```bash
+   cd src
+   python gui_main.py
+   ```
 
-4. **Create and allocate parking:**
-   - Select option `5` (Create Parking Request)
-   - Enter Vehicle ID: `CAR-001`
-   - Enter requested zone: `ZONE-A`
-   - Note the Request ID (e.g., `REQ0001`)
-   
-   - Select option `6` (Allocate Parking)
-   - Enter Request ID: `REQ0001`
+2. **Navigate to Setup Tab** (⚙️ Setup):
 
-5. **View status:**
-   - Select option `10` (View System Status)
-   - Or option `11` (View Zone Status)
+3. **Add Zones:**
+   - Enter Zone ID (e.g., `ZONE-A`)
+   - Click "Add Zone"
+   - Repeat for additional zones (e.g., `ZONE-B`, `ZONE-C`)
 
-The interactive menu is perfect for:
-- Testing the system without coding
-- Quick demonstrations
-- Learning the API flow
-- Experimenting with features
+4. **Add Parking Areas:**
+   - Select a zone from dropdown
+   - Enter Area ID (e.g., `A1`)
+   - Enter capacity (e.g., `10` slots)
+   - Click "Add Parking Area"
 
----
+5. **Link Adjacent Zones (Optional):**
+   - Select two zones to link
+   - Click "Link Adjacent Zones"
+   - This enables cross-zone allocation with lower penalties
+
+6. **Register Vehicles:**
+   - Enter Vehicle ID (e.g., `CAR-001`)
+   - Select preferred zone (optional)
+   - Click "Register Vehicle"
+
+7. **Create Parking Requests:**
+   - Navigate to "🚗 New Request" tab
+   - Select vehicle from dropdown
+   - Select requested zone
+   - Click "Create Request"
+
+8. **Allocate Parking:**
+   - System will auto-allocate in the requested zone if available
+   - Otherwise, adjacent zones (penalty: 50) or distant zones (penalty: 100)
+
+### Using CLI
+
+1. **Start the CLI:**
+   ```bash
+   cd src
+   python main.py
+   ```
+
+2. **Setup System** (follow menu options):
+   ```
+   1. Add Zone → Enter ZONE-A
+   1. Add Zone → Enter ZONE-B
+   2. Add Parking Area to Zone → ZONE-A, A1, capacity 10
+   2. Add Parking Area to Zone → ZONE-B, B1, capacity 15
+   3. Link Adjacent Zones → ZONE-A and ZONE-B
+   4. Register Vehicle → CAR-001, preferred zone ZONE-A
+   ```
+
+3. **Test Parking Operations:**
+   ```
+   5. Create Parking Request → Vehicle: CAR-001, Zone: ZONE-A
+   6. Allocate Parking → Enter request ID (e.g., REQ0001)
+   7. Mark Parking as Occupied → Enter request ID
+   8. Release Parking → Enter request ID
+   ```
+
+## Sample Workflow Example
+
+### Complete Example: Park a Vehicle
+
+**GUI Method:**
+1. Setup Tab → Add Zone `ZONE-A` → Add Parking Area `A1` with capacity `5`
+2. Setup Tab → Register Vehicle `CAR-001` with preferred zone `ZONE-A`
+3. New Request Tab → Select `CAR-001`, select `ZONE-A` → Create Request
+4. Allocation Status Tab → Click "Allocate Parking" button next to the request
+5. Click "Mark as Occupied" when vehicle arrives
+6. Click "Release Parking" when vehicle leaves
+
+**CLI Method:**
+```
+Menu: 1 → ZONE-A
+Menu: 2 → ZONE-A, A1, 5
+Menu: 4 → CAR-001, ZONE-A
+Menu: 5 → CAR-001, ZONE-A (Note the request ID, e.g., REQ0001)
+Menu: 6 → REQ0001
+Menu: 7 → REQ0001
+Menu: 8 → REQ0001
+```
+
+## Key Features to Explore
+
+### 1. Cross-Zone Allocation
+- Request parking in ZONE-A when it's full
+- System allocates in ZONE-B (adjacent) with penalty
+- Penalty = 50 for adjacent zones, 100 for distant zones
+
+### 2. Rollback Operations
+- Every operation is recorded
+- Rollback last K operations via Rollback tab (GUI) or Menu option 15 (CLI)
+- Uses stack-based LIFO data structure
+
+### 3. Analytics
+- Navigate to Analytics tab (GUI) or use Menu 17-22 (CLI)
+- View:
+  - Average parking duration
+  - Zone utilization rates
+  - Request statistics (completed vs cancelled)
+  - Peak usage zones
+  - Cross-zone allocation statistics
+
+### 4. State Machine Validation
+- Requests follow strict state transitions:
+  - REQUESTED → ALLOCATED → OCCUPIED → RELEASED
+  - REQUESTED/ALLOCATED → CANCELLED
+- Invalid transitions are rejected
 
 ## Troubleshooting
 
-**Problem:** Import errors
+### Issue: "No module named tkinter" (Linux)
+**Solution:** Install Tkinter:
 ```bash
-# Solution: Run from src/ directory
+# Ubuntu/Debian
+sudo apt-get install python3-tk
+
+# Fedora
+sudo dnf install python3-tkinter
+```
+
+### Issue: "ModuleNotFoundError: No module named 'parking_system'"
+**Solution:** Ensure you're running from the `src` directory:
+```bash
 cd src
-python my_parking.py
+python gui_main.py
 ```
 
-**Problem:** "Vehicle not registered"
-```python
-# Solution: Register before creating request
-system.register_vehicle("CAR-001", "ZONE-A")
-```
+### Issue: GUI window is too small or text is cut off
+**Solution:** Resize the window manually. Minimum size is 1000x650 pixels.
 
-**Problem:** "No available slots"
-```python
-# Solution: Add more capacity or release slots
-system.add_parking_area_to_zone("ZONE-A", "A2", 10)
+### Issue: No zones appear in dropdown
+**Solution:** First add zones in the Setup tab before creating requests.
+
+### Issue: Cannot allocate parking - "No available slots"
+**Solution:** Add more parking areas or release occupied slots.
+
+## Export Analytics
+
+To export analytics data:
+
+**GUI Method:**
+1. Navigate to Analytics tab
+2. Click "Export Analytics Summary"
+3. File saved in `exports/summary/` folder with timestamp
+
+**CLI Method:**
 ```
+Menu: 17 → View Comprehensive Analytics
+```
+Output displayed on console.
+
+## Next Steps
+
+- Read [USER_GUIDE.md](USER_GUIDE.md) for detailed feature explanations
+- Explore [DSA_CONCEPTS.md](DSA_CONCEPTS.md) to understand data structures used
+- Check [API.md](API.md) for class and method documentation
+- Review [ARCHITECTURE.md](ARCHITECTURE.md) for system design details
+
+## Quick Reference
+
+### Common Zone/Vehicle ID Formats
+- Zones: `ZONE-A`, `ZONE-B`, `PARKING-NORTH`
+- Vehicles: `CAR-001`, `BIKE-123`, `TRUCK-XYZ`
+- Areas: `A1`, `B1`, `SECTOR-1`
+
+### ID Generation Rules
+- **Zone IDs**: User-defined (uppercase recommended)
+- **Vehicle IDs**: User-defined (uppercase recommended)
+- **Request IDs**: Auto-generated as `REQ0001`, `REQ0002`, etc.
+- **Slot IDs**: Auto-generated as `{ZONE_ID}-{AREA_ID}-{SLOT_NUMBER}`
+
+### State Definitions
+- **REQUESTED**: Request created, awaiting allocation
+- **ALLOCATED**: Slot assigned, vehicle hasn't arrived
+- **OCCUPIED**: Vehicle has parked in slot
+- **RELEASED**: Vehicle left, slot freed
+- **CANCELLED**: Request cancelled before completion
+
+## Support
+
+For issues or questions:
+1. Check [USER_GUIDE.md](USER_GUIDE.md) for detailed instructions
+2. Review [API.md](API.md) for method signatures
+3. Consult [ARCHITECTURE.md](ARCHITECTURE.md) for system behavior
 
 ---
 
-## Tips
-
-✓ Always check `success` field in results  
-✓ Store request IDs for later operations  
-✓ Monitor zone capacity proactively  
-✓ Link zones strategically for better allocation  
-✓ Use meaningful IDs for zones and vehicles  
-
----
-
-**You're ready to use SmartPark! Start building your parking management system now.** 🚗🅿️
+**Ready to start?** Run `python gui_main.py` from the `src` directory!
