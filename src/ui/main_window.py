@@ -46,6 +46,9 @@ class MainWindow:
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
+        # Bind tab change event to refresh screens
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+        
         # Placeholder tabs - will be replaced with actual screens
         self.setup_tabs()
     
@@ -86,6 +89,24 @@ class MainWindow:
         analytics_frame = tk.Frame(self.notebook)
         self.notebook.add(analytics_frame, text="📈 Analytics")
         self.create_placeholder(analytics_frame, "Analytics Screen")
+    
+    def on_tab_changed(self, event):
+        """Handle tab change events to refresh screen data"""
+        try:
+            # Get the currently selected tab index
+            selected_tab = self.notebook.select()
+            tab_index = self.notebook.index(selected_tab)
+            
+            # Refresh appropriate screen based on tab index
+            # Tab 0: Setup, Tab 1: Dashboard, Tab 2: Request, etc.
+            if tab_index == 1 and hasattr(self, 'dashboard'):
+                # Refresh dashboard
+                self.dashboard.refresh_stats()
+            elif tab_index == 2 and hasattr(self, 'request_screen'):
+                # Refresh request screen zone list
+                self.request_screen.on_tab_selected()
+        except Exception as e:
+            print(f"Error in tab change: {e}")
     
     def create_placeholder(self, parent, text):
         """Create placeholder content for tabs"""

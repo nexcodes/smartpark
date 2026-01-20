@@ -40,8 +40,13 @@ class RequestScreen(tk.Frame):
         tk.Label(form_frame, text="Vehicle ID:", font=("Arial", 12)).grid(
             row=0, column=0, sticky=tk.W, pady=10, padx=10
         )
-        self.vehicle_id_entry = tk.Entry(form_frame, font=("Arial", 12), width=30)
-        self.vehicle_id_entry.grid(row=0, column=1, pady=10, padx=10)
+        self.vehicle_id_combobox = ttk.Combobox(
+            form_frame,
+            font=("Arial", 12),
+            width=28,
+            state="readonly"
+        )
+        self.vehicle_id_combobox.grid(row=0, column=1, pady=10, padx=10)
         
         # Zone selection
         tk.Label(form_frame, text="Preferred Zone:", font=("Arial", 12)).grid(
@@ -67,8 +72,36 @@ class RequestScreen(tk.Frame):
         )
         submit_btn.grid(row=2, column=0, columnspan=2, pady=30)
         
-        # Load available zones
+        # Load available zones and vehicles
         self.load_zones()
+        self.load_vehicles()
+    
+    def on_tab_selected(self):
+        """Called when this tab is selected - refresh data"""
+        self.load_zones()
+        self.load_vehicles()
+    
+    def load_vehicles(self):
+        """Load registered vehicles from parking system"""
+        try:
+            # Get vehicles from parking system
+            vehicle_ids = list(self.parking_system.vehicles.keys())
+            
+            if vehicle_ids:
+                # Store current selection if any
+                current = self.vehicle_id_combobox.get()
+                self.vehicle_id_combobox['values'] = vehicle_ids
+                
+                # Restore previous selection if still valid, otherwise select first
+                if current in vehicle_ids:
+                    self.vehicle_id_combobox.set(current)
+                else:
+                    self.vehicle_id_combobox.current(0)
+            else:
+                self.vehicle_id_combobox['values'] = []
+                self.vehicle_id_combobox.set('')
+        except Exception as e:
+            print(f"Error loading vehicles: {e}")
     
     def load_zones(self):
         """Load available zones from parking system"""
@@ -77,26 +110,29 @@ class RequestScreen(tk.Frame):
             zone_ids = list(self.parking_system.zones.keys())
             
             if zone_ids:
+                # Store current selection if any
+                current = self.zone_combobox.get()
                 self.zone_combobox['values'] = zone_ids
-                self.zone_combobox.current(0)
+                
+                # Restore previous selection if still valid, otherwise select first
+                if current in zone_ids:
+                    self.zone_combobox.set(current)
+                else:
+                    self.zone_combobox.current(0)
             else:
                 self.zone_combobox['values'] = []
-                messagebox.showwarning(
-                    "No Zones",
-                    "No parking zones available. Please set up zones first."
-                )
+                self.zone_combobox.set('')
         except Exception as e:
             print(f"Error loading zones: {e}")
-            messagebox.showerror("Error", "Failed to load parking zones")
     
     def on_request_parking(self):
         """Handle parking request submission"""
-        vehicle_id = self.vehicle_id_entry.get().strip().upper()
+        vehicle_id = self.vehicle_id_combobox.get().strip()
         zone_id = self.zone_combobox.get()
         
         # Validation
         if not vehicle_id:
-            messagebox.showerror("Error", "Please enter a Vehicle ID")
+            messagebox.showerror("Error", "Please select a Vehicle ID")
             return
         
         if not zone_id:
@@ -104,12 +140,13 @@ class RequestScreen(tk.Frame):
             return
         
         try:
-            # Register vehicle if not already registered
+            # Vehicle should already be registered (selected from dropdown)
             if vehicle_id not in self.parking_system.vehicles:
-                vehicle_result = self.parking_system.register_vehicle(vehicle_id, zone_id)
-                if not vehicle_result['success']:
-                    messagebox.showerror("Error", vehicle_result['message'])
-                    return
+                messagebox.showerror(
+                    "Error",
+                    f"Vehicle {vehicle_id} not found. Please register it in Setup tab first."
+                )
+                return
             
             # Create parking request
             request_result = self.parking_system.create_parking_request(vehicle_id, zone_id)
@@ -141,8 +178,9 @@ class RequestScreen(tk.Frame):
                     message += f"Reason: {allocation_result['message']}"
                     messagebox.showwarning("Allocation Failed", message)
                 
-                # Clear form
-                self.vehicle_id_entry.delete(0, tk.END)
+                # Clear form (reset to first vehicle)
+                if self.vehicle_id_combobox['values']:
+                    self.vehicle_id_combobox.current(0)
                 
                 # Refresh dashboard if it exists
                 self.refresh_parent_dashboard()
