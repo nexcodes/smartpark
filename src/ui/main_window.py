@@ -25,29 +25,76 @@ class MainWindow:
         self.parking_system = parking_system
         self.root = tk.Tk()
         self.root.title("SmartPark - Parking Management System")
-        self.root.geometry("1000x700")
+        self.root.geometry("1200x750")
+        
+        # Modern color scheme
+        self.colors = {
+            'primary': '#2563eb',      # Blue
+            'secondary': '#10b981',    # Green
+            'danger': '#ef4444',       # Red
+            'warning': '#f59e0b',      # Orange
+            'info': '#3b82f6',         # Light Blue
+            'success': '#22c55e',      # Light Green
+            'dark': '#1e293b',         # Dark Blue Gray
+            'light': '#f8fafc',        # Light Gray
+            'gray': '#64748b',         # Medium Gray
+            'card_bg': '#ffffff'       # White
+        }
+        
+        # Set minimum window size
+        self.root.minsize(1000, 650)
+        
+        # Set background color
+        self.root.configure(bg=self.colors['light'])
         
         # Create main container
         self.setup_ui()
     
     def setup_ui(self):
         """Set up the main UI components"""
-        # Header
-        header_frame = tk.Frame(self.root, bg="#2c3e50", height=80)
+        # Header with modern styling
+        header_frame = tk.Frame(self.root, bg=self.colors['dark'], height=100)
         header_frame.pack(fill=tk.X, side=tk.TOP)
+        header_frame.pack_propagate(False)  # Maintain height
         
+        # Title with icon
         title_label = tk.Label(
             header_frame,
-            text="SmartPark Management System",
-            font=("Arial", 24, "bold"),
-            bg="#2c3e50",
+            text="🅿️ SmartPark Management System",
+            font=("Segoe UI", 26, "bold"),
+            bg=self.colors['dark'],
             fg="white"
         )
-        title_label.pack(pady=20)
+        title_label.pack(pady=25)
+        
+        # Subtitle
+        subtitle_label = tk.Label(
+            header_frame,
+            text="Intelligent Parking Allocation with DSA",
+            font=("Segoe UI", 10),
+            bg=self.colors['dark'],
+            fg=self.colors['gray']
+        )
+        subtitle_label.pack()
+        
+        # Style the notebook
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure('TNotebook', background=self.colors['light'], borderwidth=0)
+        style.configure('TNotebook.Tab', 
+                       padding=[20, 10], 
+                       font=('Segoe UI', 11, 'bold'),
+                       background=self.colors['card_bg'],
+                       foreground=self.colors['dark'])
+        style.map('TNotebook.Tab',
+                 background=[('selected', self.colors['primary'])],
+                 foreground=[('selected', 'white')],
+                 padding=[('selected', [25, 12])],  # Larger padding for selected tab
+                 expand=[('selected', [1, 1, 1, 0])])
         
         # Create notebook (tabbed interface)
         self.notebook = ttk.Notebook(self.root)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
         
         # Bind tab change event to refresh screens
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)

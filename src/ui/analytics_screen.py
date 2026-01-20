@@ -26,35 +26,53 @@ class AnalyticsScreen(tk.Frame):
     
     def setup_ui(self):
         """Set up the UI components"""
-        # Header
-        header_frame = tk.Frame(self, bg="#34495e", height=60)
-        header_frame.pack(fill=tk.X, pady=(0, 10))
+        # Background
+        self.configure(bg='#f8fafc')
+        
+        # Header with modern design - more compact
+        header_frame = tk.Frame(self, bg="#1e293b", height=70)
+        header_frame.pack(fill=tk.X)
+        header_frame.pack_propagate(False)
+        
+        # Header content
+        header_content = tk.Frame(header_frame, bg="#1e293b")
+        header_content.pack(fill=tk.BOTH, expand=True, padx=25)
         
         title_label = tk.Label(
-            header_frame,
-            text="📈 System Analytics & Statistics",
-            font=("Arial", 18, "bold"),
-            bg="#34495e",
+            header_content,
+            text="📊 System Analytics & Statistics",
+            font=("Segoe UI", 20, "bold"),
+            bg="#1e293b",
             fg="white"
         )
-        title_label.pack(pady=15)
+        title_label.pack(side=tk.LEFT, pady=20)
         
-        # Main content area with scrollbar
-        main_frame = tk.Frame(self, bg="#ecf0f1")
+        # Main content area with scrollbar - improved sizing
+        main_frame = tk.Frame(self, bg="#f8fafc")
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
         # Create canvas with scrollbar
-        canvas = tk.Canvas(main_frame, bg="#ecf0f1", highlightthickness=0)
+        canvas = tk.Canvas(main_frame, bg="#f8fafc", highlightthickness=0)
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas, bg="#ecf0f1")
+        scrollable_frame = tk.Frame(canvas, bg="#f8fafc")
         
         scrollable_frame.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
         
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=canvas.winfo_reqwidth())
         canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Update canvas width when main frame resizes
+        def _configure_canvas(event):
+            canvas.itemconfig(canvas.find_withtag("all")[0], width=event.width)
+        canvas.bind("<Configure>", _configure_canvas)
         
         canvas.pack(side="left", fill=tk.BOTH, expand=True)
         scrollbar.pack(side="right", fill="y")
@@ -62,19 +80,20 @@ class AnalyticsScreen(tk.Frame):
         # Store reference to scrollable frame
         self.content_frame = scrollable_frame
         
-        # Refresh button
-        button_frame = tk.Frame(self, bg="#ecf0f1")
-        button_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+        # Buttons with modern styling - more compact
+        button_frame = tk.Frame(self, bg="#f8fafc")
+        button_frame.pack(fill=tk.X, padx=20, pady=(0, 15))
         
         refresh_btn = tk.Button(
             button_frame,
             text="🔄 Refresh Analytics",
             command=self.refresh_analytics,
-            bg="#3498db",
+            bg="#2563eb",
             fg="white",
-            font=("Arial", 11, "bold"),
+            activebackground="#1d4ed8",
+            font=("Segoe UI", 11, "bold"),
             padx=20,
-            pady=8,
+            pady=10,
             relief=tk.FLAT,
             cursor="hand2"
         )
@@ -84,11 +103,12 @@ class AnalyticsScreen(tk.Frame):
             button_frame,
             text="📄 Export Summary",
             command=self.export_summary,
-            bg="#27ae60",
+            bg="#22c55e",
             fg="white",
-            font=("Arial", 11, "bold"),
+            activebackground="#16a34a",
+            font=("Segoe UI", 11, "bold"),
             padx=20,
-            pady=8,
+            pady=10,
             relief=tk.FLAT,
             cursor="hand2"
         )
@@ -108,26 +128,27 @@ class AnalyticsScreen(tk.Frame):
         self.create_cross_zone_section()
     
     def create_section_card(self, title, bg_color="#ffffff"):
-        """Create a card frame for a section"""
-        card = tk.Frame(self.content_frame, bg=bg_color, relief=tk.RAISED, bd=1)
-        card.pack(fill=tk.X, pady=10, padx=5)
+        """Create a modern card frame for a section"""
+        card = tk.Frame(self.content_frame, bg=bg_color, highlightbackground="#e2e8f0", highlightthickness=1)
+        card.pack(fill=tk.BOTH, expand=True, pady=8, padx=5)
         
-        # Section header
-        header = tk.Frame(card, bg="#2c3e50", height=40)
+        # Section header with gradient-like effect
+        header = tk.Frame(card, bg="#1e293b", height=45)
         header.pack(fill=tk.X)
+        header.pack_propagate(False)
         
         title_label = tk.Label(
             header,
             text=title,
-            font=("Arial", 14, "bold"),
-            bg="#2c3e50",
+            font=("Segoe UI", 13, "bold"),
+            bg="#1e293b",
             fg="white"
         )
-        title_label.pack(pady=8, padx=10, anchor="w")
+        title_label.pack(pady=10, padx=15, anchor="w")
         
-        # Content frame
+        # Content frame with better padding
         content = tk.Frame(card, bg=bg_color)
-        content.pack(fill=tk.BOTH, expand=True, padx=15, pady=15)
+        content.pack(fill=tk.BOTH, expand=True, padx=25, pady=20)
         
         return content
     
@@ -146,9 +167,9 @@ class AnalyticsScreen(tk.Frame):
             minutes_label = tk.Label(
                 duration_frame,
                 text=f"{duration_data['average_duration_minutes']} min",
-                font=("Arial", 32, "bold"),
+                font=("Segoe UI", 36, "bold"),
                 bg="white",
-                fg="#3498db"
+                fg="#2563eb"
             )
             minutes_label.pack()
             
@@ -156,28 +177,28 @@ class AnalyticsScreen(tk.Frame):
             seconds_label = tk.Label(
                 duration_frame,
                 text=f"({duration_data['average_duration_seconds']} seconds)",
-                font=("Arial", 11),
+                font=("Segoe UI", 11),
                 bg="white",
-                fg="#7f8c8d"
+                fg="#64748b"
             )
-            seconds_label.pack()
+            seconds_label.pack(pady=(5, 0))
             
             # Count
             count_label = tk.Label(
                 content,
                 text=f"Based on {duration_data['completed_requests']} completed parking sessions",
-                font=("Arial", 10),
+                font=("Segoe UI", 10),
                 bg="white",
-                fg="#95a5a6"
+                fg="#94a3b8"
             )
-            count_label.pack(pady=(10, 0))
+            count_label.pack(pady=(15, 0))
         else:
             no_data_label = tk.Label(
                 content,
                 text=duration_data['message'],
-                font=("Arial", 12),
+                font=("Segoe UI", 12),
                 bg="white",
-                fg="#e74c3c"
+                fg="#ef4444"
             )
             no_data_label.pack(pady=20)
     

@@ -23,17 +23,66 @@ class SetupScreen(tk.Frame):
     
     def setup_ui(self):
         """Set up the configuration UI components"""
-        # Title
-        title = tk.Label(
-            self,
-            text="System Setup & Configuration",
-            font=("Arial", 20, "bold"),
-            fg="#2c3e50"
+        # Background
+        self.configure(bg='#f8fafc')
+        
+        # Create canvas and scrollbar for scrollable content
+        canvas = tk.Canvas(self, bg='#f8fafc', highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg='#f8fafc')
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
-        title.pack(pady=20)
+        
+        canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Make scrollable_frame expand to canvas width
+        def _configure_canvas(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+        canvas.bind("<Configure>", _configure_canvas)
+        
+        # Pack canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Enable mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Title section
+        title_frame = tk.Frame(scrollable_frame, bg='#f8fafc')
+        title_frame.pack(pady=25, padx=30, fill=tk.X)
+        
+        title = tk.Label(
+            title_frame,
+            text="⚙️ System Setup & Configuration",
+            font=("Segoe UI", 24, "bold"),
+            fg="#1e293b",
+            bg='#f8fafc'
+        )
+        title.pack(anchor='w')
+        
+        subtitle = tk.Label(
+            title_frame,
+            text="Configure zones, parking areas, adjacency, and vehicles",
+            font=("Segoe UI", 10),
+            fg="#64748b",
+            bg='#f8fafc'
+        )
+        subtitle.pack(anchor='w', pady=(5, 0))
         
         # Create notebook for different setup sections
-        notebook = ttk.Notebook(self)
+        style = ttk.Style()
+        style.configure('Setup.TNotebook', background='#f8fafc')
+        style.configure('Setup.TNotebook.Tab',
+                       padding=[15, 8],
+                       font=('Segoe UI', 10, 'bold'))
+        
+        notebook = ttk.Notebook(scrollable_frame, style='Setup.TNotebook')
         notebook.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
         
         # Zone Management Tab
@@ -58,70 +107,117 @@ class SetupScreen(tk.Frame):
     
     def setup_zone_tab(self, parent):
         """Set up zone management tab"""
+        parent.configure(bg='#f8fafc')
+        
         # Instructions
         instruction = tk.Label(
             parent,
             text="Create new parking zones in the system",
-            font=("Arial", 11),
-            fg="#7f8c8d"
+            font=("Segoe UI", 11),
+            fg="#64748b",
+            bg='#f8fafc'
         )
         instruction.pack(pady=20)
         
-        # Input frame
-        input_frame = tk.Frame(parent)
-        input_frame.pack(pady=20)
+        # Input card
+        card_frame = tk.Frame(parent, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        card_frame.pack(pady=10, padx=40, fill=tk.X)
         
-        tk.Label(input_frame, text="Zone ID:", font=("Arial", 12, "bold")).grid(
-            row=0, column=0, padx=10, pady=10, sticky=tk.E
+        input_frame = tk.Frame(card_frame, bg='white')
+        input_frame.pack(pady=30, padx=30)
+        
+        tk.Label(input_frame, text="Zone ID", font=("Segoe UI", 12, "bold"),
+                bg='white', fg='#1e293b').grid(
+            row=0, column=0, padx=10, pady=(0, 5), sticky=tk.W
         )
         
-        self.zone_id_entry = tk.Entry(input_frame, font=("Arial", 12), width=25)
-        self.zone_id_entry.grid(row=0, column=1, padx=10, pady=10)
+        self.zone_id_entry = tk.Entry(input_frame, font=("Segoe UI", 11), width=30,
+                                     relief=tk.SOLID, borderwidth=1)
+        self.zone_id_entry.grid(row=1, column=0, padx=10, pady=(0, 5))
         
         # Example text
         example = tk.Label(
             input_frame,
             text="e.g., ZONE-A, ZONE-B, ZONE-C",
-            font=("Arial", 9),
-            fg="#95a5a6"
+            font=("Segoe UI", 9),
+            fg="#94a3b8",
+            bg='white'
         )
-        example.grid(row=1, column=1, sticky=tk.W, padx=10)
+        example.grid(row=2, column=0, sticky=tk.W, padx=10, pady=(0, 10))
         
         # Add button
         add_btn = tk.Button(
             input_frame,
-            text="Add Zone",
-            font=("Arial", 12, "bold"),
-            bg="#3498db",
+            text="➕ Add Zone",
+            font=("Segoe UI", 11, "bold"),
+            bg="#2563eb",
             fg="white",
-            width=15,
+            activebackground="#1d4ed8",
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
             command=self.add_zone
         )
-        add_btn.grid(row=2, column=0, columnspan=2, pady=20)
+        add_btn.grid(row=3, column=0, pady=10)
         
-        # Existing zones list
-        list_frame = tk.LabelFrame(
-            parent,
-            text="Existing Zones",
-            font=("Arial", 11, "bold")
-        )
-        list_frame.pack(pady=20, padx=50, fill=tk.BOTH, expand=True)
+        # Existing zones list - Modern card design
+        list_card = tk.Frame(parent, bg='white', highlightbackground='#e2e8f0', highlightthickness=1)
+        list_card.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
         
-        self.zone_listbox = tk.Listbox(
-            list_frame,
-            font=("Courier", 11),
-            height=8
-        )
-        self.zone_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Header with title and refresh button
+        header_frame = tk.Frame(list_card, bg='white')
+        header_frame.pack(fill=tk.X, padx=20, pady=(15, 10))
         
-        # Refresh button
+        tk.Label(
+            header_frame,
+            text="📋 Registered Zones",
+            font=("Segoe UI", 13, "bold"),
+            fg='#1e293b',
+            bg='white'
+        ).pack(side=tk.LEFT)
+        
         refresh_btn = tk.Button(
-            list_frame,
-            text="Refresh List",
-            font=("Arial", 10),
+            header_frame,
+            text="🔄 Refresh",
+            font=("Segoe UI", 9, "bold"),
+            bg='#3b82f6',
+            fg='white',
+            activebackground='#2563eb',
+            activeforeground='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=6,
+            cursor="hand2",
             command=self.refresh_zone_list
         )
-        refresh_btn.pack(pady=5)
+        refresh_btn.pack(side=tk.RIGHT)
+        
+        # Separator line
+        tk.Frame(list_card, bg='#e2e8f0', height=1).pack(fill=tk.X, padx=20)
+        
+        # Container for listbox and scrollbar
+        list_container = tk.Frame(list_card, bg='white')
+        list_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)
+        
+        # Styled scrollbar
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical")
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(5, 0))
+        
+        self.zone_listbox = tk.Listbox(
+            list_container,
+            font=("Consolas", 10),
+            yscrollcommand=scrollbar.set,
+            relief=tk.FLAT,
+            borderwidth=0,
+            bg='#f8fafc',
+            selectbackground='#3b82f6',
+            selectforeground='white',
+            highlightthickness=0,
+            activestyle='none'
+        )
+        self.zone_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.zone_listbox.yview)
         
         # Initial load
         self.refresh_zone_list()
@@ -257,23 +353,41 @@ class SetupScreen(tk.Frame):
         display_frame = tk.LabelFrame(
             parent,
             text="Current Adjacency Links",
-            font=("Arial", 11, "bold")
+            font=("Segoe UI", 11, "bold"),
+            bg='#f8fafc',
+            fg='#1e293b'
         )
-        display_frame.pack(pady=20, padx=50, fill=tk.BOTH, expand=True)
+        display_frame.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
+        
+        # Add scrollbar
+        text_container = tk.Frame(display_frame, bg='white')
+        text_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        scrollbar = tk.Scrollbar(text_container)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.adjacency_text = tk.Text(
-            display_frame,
+            text_container,
             height=10,
-            font=("Courier", 10),
-            state=tk.DISABLED
+            font=("Consolas", 10),
+            state=tk.DISABLED,
+            yscrollcommand=scrollbar.set,
+            relief=tk.FLAT,
+            bg='#f8fafc',
+            fg='#1e293b'
         )
-        self.adjacency_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.adjacency_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.adjacency_text.yview)
         
         # Refresh button
         refresh_btn = tk.Button(
             display_frame,
-            text="Refresh Adjacency",
-            font=("Arial", 10),
+            text="🔄 Refresh Adjacency",
+            font=("Segoe UI", 10),
+            bg='#f8fafc',
+            fg='#1e293b',
+            relief=tk.FLAT,
+            cursor="hand2",
             command=self.refresh_adjacency_display
         )
         refresh_btn.pack(pady=5)
@@ -338,29 +452,63 @@ class SetupScreen(tk.Frame):
         )
         register_btn.grid(row=3, column=0, columnspan=2, pady=20)
         
-        # Registered vehicles list
-        list_frame = tk.LabelFrame(
-            parent,
-            text="Registered Vehicles",
-            font=("Arial", 11, "bold")
-        )
-        list_frame.pack(pady=20, padx=50, fill=tk.BOTH, expand=True)
+        # Registered vehicles list - Modern card design
+        list_card = tk.Frame(parent, bg='white', highlightbackground='#e2e8f0', highlightthickness=1)
+        list_card.pack(pady=20, padx=40, fill=tk.BOTH, expand=True)
         
-        self.vehicle_listbox = tk.Listbox(
-            list_frame,
-            font=("Courier", 11),
-            height=8
-        )
-        self.vehicle_listbox.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Header with title and refresh button
+        header_frame = tk.Frame(list_card, bg='white')
+        header_frame.pack(fill=tk.X, padx=20, pady=(15, 10))
         
-        # Refresh button
+        tk.Label(
+            header_frame,
+            text="🚗 Registered Vehicles",
+            font=("Segoe UI", 13, "bold"),
+            fg='#1e293b',
+            bg='white'
+        ).pack(side=tk.LEFT)
+        
         refresh_btn = tk.Button(
-            list_frame,
-            text="Refresh List",
-            font=("Arial", 10),
+            header_frame,
+            text="🔄 Refresh",
+            font=("Segoe UI", 9, "bold"),
+            bg='#8b5cf6',
+            fg='white',
+            activebackground='#7c3aed',
+            activeforeground='white',
+            relief=tk.FLAT,
+            padx=15,
+            pady=6,
+            cursor="hand2",
             command=self.refresh_vehicle_list
         )
-        refresh_btn.pack(pady=5)
+        refresh_btn.pack(side=tk.RIGHT)
+        
+        # Separator line
+        tk.Frame(list_card, bg='#e2e8f0', height=1).pack(fill=tk.X, padx=20)
+        
+        # Container for listbox and scrollbar
+        list_container = tk.Frame(list_card, bg='white')
+        list_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)
+        
+        # Styled scrollbar
+        scrollbar = ttk.Scrollbar(list_container, orient="vertical")
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(5, 0))
+        
+        self.vehicle_listbox = tk.Listbox(
+            list_container,
+            font=("Consolas", 10),
+            yscrollcommand=scrollbar.set,
+            relief=tk.FLAT,
+            borderwidth=0,
+            bg='#f8fafc',
+            selectbackground='#8b5cf6',
+            selectforeground='white',
+            highlightthickness=0,
+            activestyle='none'
+        )
+        self.vehicle_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=self.vehicle_listbox.yview)
         
         # Load zones and vehicles
         self.refresh_vehicle_zone_list()
@@ -395,18 +543,22 @@ class SetupScreen(tk.Frame):
         self.zone_listbox.delete(0, tk.END)
         
         zones = list(self.parking_system.zones.keys())
+        print(f"Refreshing zone list, found {len(zones)} zones")  # Debug
+        
         if zones:
             for zone_id in zones:
                 zone_status = self.parking_system.get_zone_status(zone_id)
                 if zone_status:
                     capacity = zone_status['total_capacity']
                     available = zone_status['available']
-                    self.zone_listbox.insert(
-                        tk.END,
-                        f"{zone_id}: {capacity} slots ({available} available)"
-                    )
+                    display_text = f"{zone_id}: {capacity} slots ({available} available)"
+                    self.zone_listbox.insert(tk.END, display_text)
+                    print(f"Added zone: {display_text}")  # Debug
+                else:
+                    self.zone_listbox.insert(tk.END, f"{zone_id}: Status unavailable")
         else:
             self.zone_listbox.insert(tk.END, "No zones created yet")
+            self.zone_listbox.itemconfig(0, {'fg': '#94a3b8'})  # Gray out placeholder
     
     # ========== PARKING AREA OPERATIONS ==========
     
@@ -551,15 +703,17 @@ class SetupScreen(tk.Frame):
         self.vehicle_listbox.delete(0, tk.END)
         
         vehicles = self.parking_system.vehicles
+        print(f"Refreshing vehicle list, found {len(vehicles)} vehicles")  # Debug
+        
         if vehicles:
             for vehicle_id, vehicle in vehicles.items():
                 pref_zone = vehicle.preferred_zone if vehicle.preferred_zone else "None"
-                self.vehicle_listbox.insert(
-                    tk.END,
-                    f"{vehicle_id}: Preferred Zone = {pref_zone}"
-                )
+                display_text = f"{vehicle_id}: Preferred Zone = {pref_zone}"
+                self.vehicle_listbox.insert(tk.END, display_text)
+                print(f"Added vehicle: {display_text}")  # Debug
         else:
             self.vehicle_listbox.insert(tk.END, "No vehicles registered yet")
+            self.vehicle_listbox.itemconfig(0, {'fg': '#94a3b8'})  # Gray out placeholder
     
     # ========== HELPER METHODS ==========
     

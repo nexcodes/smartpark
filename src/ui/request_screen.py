@@ -23,54 +23,91 @@ class RequestScreen(tk.Frame):
     
     def setup_ui(self):
         """Set up request screen UI components"""
-        # Title
-        title = tk.Label(
-            self,
-            text="Create Parking Request",
-            font=("Arial", 20, "bold"),
-            fg="#2c3e50"
-        )
-        title.pack(pady=20)
+        # Background
+        self.configure(bg='#f8fafc')
         
-        # Form frame
-        form_frame = tk.Frame(self)
-        form_frame.pack(pady=20, padx=50, fill=tk.BOTH, expand=True)
+        # Title section
+        title_frame = tk.Frame(self, bg='#f8fafc')
+        title_frame.pack(pady=25, padx=30, fill=tk.X)
+        
+        title = tk.Label(
+            title_frame,
+            text="🚗 Create Parking Request",
+            font=("Segoe UI", 24, "bold"),
+            fg="#1e293b",
+            bg='#f8fafc'
+        )
+        title.pack(anchor='w')
+        
+        subtitle = tk.Label(
+            title_frame,
+            text="Request a parking slot for your vehicle",
+            font=("Segoe UI", 10),
+            fg="#64748b",
+            bg='#f8fafc'
+        )
+        subtitle.pack(anchor='w', pady=(5, 0))
+        
+        # Form card with modern design
+        card_frame = tk.Frame(self, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        card_frame.pack(pady=20, padx=100, fill=tk.BOTH, expand=True)
+        
+        # Form content
+        form_frame = tk.Frame(card_frame, bg='white')
+        form_frame.pack(pady=40, padx=50, fill=tk.BOTH, expand=True)
         
         # Vehicle ID
-        tk.Label(form_frame, text="Vehicle ID:", font=("Arial", 12)).grid(
-            row=0, column=0, sticky=tk.W, pady=10, padx=10
+        tk.Label(form_frame, text="Vehicle ID", font=("Segoe UI", 12, "bold"), 
+                bg='white', fg='#1e293b').grid(
+            row=0, column=0, sticky=tk.W, pady=(0, 5), padx=10
         )
+        
+        # Style for combobox
+        style = ttk.Style()
+        style.configure('Modern.TCombobox', padding=5)
+        
         self.vehicle_id_combobox = ttk.Combobox(
             form_frame,
-            font=("Arial", 12),
-            width=28,
-            state="readonly"
+            font=("Segoe UI", 11),
+            width=35,
+            state="readonly",
+            style='Modern.TCombobox'
         )
-        self.vehicle_id_combobox.grid(row=0, column=1, pady=10, padx=10)
+        self.vehicle_id_combobox.grid(row=1, column=0, pady=(0, 20), padx=10, sticky='ew')
         
         # Zone selection
-        tk.Label(form_frame, text="Preferred Zone:", font=("Arial", 12)).grid(
-            row=1, column=0, sticky=tk.W, pady=10, padx=10
+        tk.Label(form_frame, text="Preferred Zone", font=("Segoe UI", 12, "bold"),
+                bg='white', fg='#1e293b').grid(
+            row=2, column=0, sticky=tk.W, pady=(0, 5), padx=10
         )
         self.zone_combobox = ttk.Combobox(
             form_frame,
-            font=("Arial", 12),
-            width=28,
-            state="readonly"
+            font=("Segoe UI", 11),
+            width=35,
+            state="readonly",
+            style='Modern.TCombobox'
         )
-        self.zone_combobox.grid(row=1, column=1, pady=10, padx=10)
+        self.zone_combobox.grid(row=3, column=0, pady=(0, 30), padx=10, sticky='ew')
         
-        # Submit button
+        # Configure grid column
+        form_frame.grid_columnconfigure(0, weight=1)
+        
+        # Submit button with modern design
         submit_btn = tk.Button(
             form_frame,
-            text="Request Parking",
-            font=("Arial", 14, "bold"),
-            bg="#27ae60",
+            text="🅿️ Request Parking Slot",
+            font=("Segoe UI", 13, "bold"),
+            bg="#22c55e",
             fg="white",
-            width=20,
+            activebackground="#16a34a",
+            activeforeground="white",
+            relief=tk.FLAT,
+            padx=30,
+            pady=15,
+            cursor="hand2",
             command=self.on_request_parking
         )
-        submit_btn.grid(row=2, column=0, columnspan=2, pady=30)
+        submit_btn.grid(row=4, column=0, pady=20, padx=10)
         
         # Load available zones and vehicles
         self.load_zones()

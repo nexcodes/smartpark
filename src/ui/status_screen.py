@@ -28,74 +28,109 @@ class StatusScreen(tk.Frame):
     
     def setup_ui(self):
         """Set up status screen UI components"""
-        # Title
-        title = tk.Label(
-            self,
-            text="Allocation Status",
-            font=("Arial", 20, "bold"),
-            fg="#2c3e50"
-        )
-        title.pack(pady=20)
+        # Background
+        self.configure(bg='#f8fafc')
         
-        # Control frame
-        control_frame = tk.Frame(self)
-        control_frame.pack(pady=10)
+        # Title section
+        title_frame = tk.Frame(self, bg='#f8fafc')
+        title_frame.pack(pady=25, padx=30, fill=tk.X)
+        
+        title = tk.Label(
+            title_frame,
+            text="📍 Allocation Status",
+            font=("Segoe UI", 24, "bold"),
+            fg="#1e293b",
+            bg='#f8fafc'
+        )
+        title.pack(anchor='w')
+        
+        subtitle = tk.Label(
+            title_frame,
+            text="View and manage parking request allocations",
+            font=("Segoe UI", 10),
+            fg="#64748b",
+            bg='#f8fafc'
+        )
+        subtitle.pack(anchor='w', pady=(5, 0))
+        
+        # Control frame with modern styling
+        control_frame = tk.Frame(self, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        control_frame.pack(pady=15, padx=30, fill=tk.X)
+        
+        inner_control = tk.Frame(control_frame, bg='white')
+        inner_control.pack(pady=15, padx=20, fill=tk.X)
         
         # Filter options
-        tk.Label(control_frame, text="Filter by Status:", font=("Arial", 11)).pack(side=tk.LEFT, padx=5)
+        tk.Label(inner_control, text="Filter by Status:", font=("Segoe UI", 11, "bold"),
+                bg='white', fg='#1e293b').pack(side=tk.LEFT, padx=(0, 10))
         
         self.filter_var = tk.StringVar(value="ALL")
         filter_options = ["ALL", "REQUESTED", "ALLOCATED", "OCCUPIED", "RELEASED", "CANCELLED"]
         
+        style = ttk.Style()
+        style.configure('Status.TCombobox', padding=5)
+        
         self.filter_combobox = ttk.Combobox(
-            control_frame,
+            inner_control,
             textvariable=self.filter_var,
             values=filter_options,
-            font=("Arial", 10),
+            font=("Segoe UI", 10),
             width=15,
-            state="readonly"
+            state="readonly",
+            style='Status.TCombobox'
         )
         self.filter_combobox.pack(side=tk.LEFT, padx=5)
         self.filter_combobox.bind("<<ComboboxSelected>>", lambda e: self.refresh_status())
         
         refresh_btn = tk.Button(
-            control_frame,
-            text="Refresh",
-            font=("Arial", 11),
-            bg="#3498db",
+            inner_control,
+            text="🔄 Refresh",
+            font=("Segoe UI", 10, "bold"),
+            bg="#2563eb",
             fg="white",
+            activebackground="#1d4ed8",
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
             command=self.refresh_status
         )
-        refresh_btn.pack(side=tk.LEFT, padx=5)
+        refresh_btn.pack(side=tk.LEFT, padx=10)
         
         # Stats label
         self.stats_label = tk.Label(
-            control_frame,
+            inner_control,
             text="Total Requests: 0",
-            font=("Arial", 10),
-            fg="#7f8c8d"
+            font=("Segoe UI", 10),
+            fg="#64748b",
+            bg='white'
         )
         self.stats_label.pack(side=tk.LEFT, padx=20)
         
         # Action buttons frame
-        action_frame = tk.Frame(self)
-        action_frame.pack(pady=10)
+        action_frame = tk.Frame(self, bg='#f8fafc')
+        action_frame.pack(pady=15, padx=30)
         
         tk.Label(
             action_frame,
             text="Actions on Selected Request:",
-            font=("Arial", 11, "bold"),
-            fg="#2c3e50"
+            font=("Segoe UI", 11, "bold"),
+            fg="#1e293b",
+            bg='#f8fafc'
         ).pack(side=tk.LEFT, padx=10)
         
         # Mark as Occupied button
         self.occupy_btn = tk.Button(
             action_frame,
-            text="Mark as Occupied",
-            font=("Arial", 10),
-            bg="#27ae60",
+            text="✅ Mark as Occupied",
+            font=("Segoe UI", 10, "bold"),
+            bg="#22c55e",
             fg="white",
-            width=18,
+            activebackground="#16a34a",
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
             command=self.mark_occupied
         )
         self.occupy_btn.pack(side=tk.LEFT, padx=5)
@@ -103,11 +138,15 @@ class StatusScreen(tk.Frame):
         # Release Parking button
         self.release_btn = tk.Button(
             action_frame,
-            text="Release Parking",
-            font=("Arial", 10),
-            bg="#9b59b6",
+            text="🚦 Release Parking",
+            font=("Segoe UI", 10, "bold"),
+            bg="#8b5cf6",
             fg="white",
-            width=18,
+            activebackground="#7c3aed",
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
             command=self.release_parking
         )
         self.release_btn.pack(side=tk.LEFT, padx=5)
@@ -115,22 +154,42 @@ class StatusScreen(tk.Frame):
         # Cancel Request button
         self.cancel_btn = tk.Button(
             action_frame,
-            text="Cancel Request",
-            font=("Arial", 10),
-            bg="#e74c3c",
+            text="❌ Cancel Request",
+            font=("Segoe UI", 10, "bold"),
+            bg="#ef4444",
             fg="white",
-            width=18,
+            activebackground="#dc2626",
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
             command=self.cancel_request
         )
         self.cancel_btn.pack(side=tk.LEFT, padx=5)
         
-        # Table frame
-        table_frame = tk.Frame(self)
-        table_frame.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
+        # Table frame with card styling
+        table_frame = tk.Frame(self, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        table_frame.pack(pady=10, padx=30, fill=tk.BOTH, expand=True)
+        
+        # Style the treeview
+        style = ttk.Style()
+        style.configure('Modern.Treeview',
+                       font=('Segoe UI', 10),
+                       rowheight=30,
+                       background='white',
+                       fieldbackground='white',
+                       foreground='#1e293b')
+        style.configure('Modern.Treeview.Heading',
+                       font=('Segoe UI', 10, 'bold'),
+                       background='#f1f5f9',
+                       foreground='#1e293b')
+        style.map('Modern.Treeview',
+                 background=[('selected', '#2563eb')],
+                 foreground=[('selected', 'white')])
         
         # Create treeview with updated columns
         columns = ("Request ID", "Vehicle ID", "Requested Zone", "Allocated Zone", "Slot ID", "Status", "Penalty", "Timestamp")
-        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=15)
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", height=15, style='Modern.Treeview')
         
         # Define headings and column widths
         column_widths = {

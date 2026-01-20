@@ -28,126 +28,198 @@ class RollbackScreen(tk.Frame):
     
     def setup_ui(self):
         """Set up rollback screen UI components"""
-        # Title
-        title = tk.Label(
-            self,
-            text="Rollback Operations",
-            font=("Arial", 20, "bold"),
-            fg="#2c3e50"
-        )
-        title.pack(pady=20)
+        # Background
+        self.configure(bg='#f8fafc')
         
-        # Info section
-        info_frame = tk.Frame(self, bg="#ecf0f1", relief=tk.RIDGE, borderwidth=2)
-        info_frame.pack(pady=10, padx=50, fill=tk.X)
+        # Create canvas with scrollbar for entire content
+        main_canvas = tk.Canvas(self, bg='#f8fafc', highlightthickness=0)
+        scrollbar = tk.Scrollbar(self, orient="vertical", command=main_canvas.yview)
+        scrollable_frame = tk.Frame(main_canvas, bg='#f8fafc')
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: main_canvas.configure(scrollregion=main_canvas.bbox("all"))
+        )
+        
+        main_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        main_canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            main_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        main_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        main_canvas.pack(side="left", fill=tk.BOTH, expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Title section
+        title_frame = tk.Frame(scrollable_frame, bg='#f8fafc')
+        title_frame.pack(pady=25, padx=30, fill=tk.X)
+        
+        title = tk.Label(
+            title_frame,
+            text="↩️ Rollback Operations",
+            font=("Segoe UI", 24, "bold"),
+            fg="#1e293b",
+            bg='#f8fafc'
+        )
+        title.pack(anchor='w')
+        
+        subtitle = tk.Label(
+            title_frame,
+            text="Undo operations using STACK (LIFO) data structure",
+            font=("Segoe UI", 10),
+            fg="#64748b",
+            bg='#f8fafc'
+        )
+        subtitle.pack(anchor='w', pady=(5, 0))
+        
+        # Info card with modern styling
+        info_frame = tk.Frame(scrollable_frame, bg="#dbeafe", highlightbackground="#3b82f6", highlightthickness=2)
+        info_frame.pack(pady=15, padx=30, fill=tk.X)
         
         info_text = tk.Label(
             info_frame,
-            text="ℹ️  Rollback uses STACK (LIFO) data structure to undo operations\n"
-                 "The most recent operations are undone first",
-            font=("Arial", 11),
-            bg="#ecf0f1",
-            fg="#2c3e50",
+            text="ℹ️  The most recent operations are undone first (Last-In-First-Out)",
+            font=("Segoe UI", 11),
+            bg="#dbeafe",
+            fg="#1e40af",
             justify=tk.LEFT,
             padx=20,
             pady=15
         )
         info_text.pack()
         
-        # Rollback Section
-        rollback_frame = tk.LabelFrame(
-            self,
+        # Rollback card
+        rollback_card = tk.Frame(scrollable_frame, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        rollback_card.pack(pady=15, padx=30, fill=tk.X)
+        
+        rollback_frame = tk.Frame(rollback_card, bg='white')
+        rollback_frame.pack(pady=25, padx=25, fill=tk.X)
+        
+        # Card title
+        card_title = tk.Label(
+            rollback_frame,
             text="Rollback Operations",
-            font=("Arial", 14, "bold"),
-            padx=20,
-            pady=20
+            font=("Segoe UI", 14, "bold"),
+            bg='white',
+            fg='#1e293b'
         )
-        rollback_frame.pack(pady=20, padx=50, fill=tk.X)
+        card_title.grid(row=0, column=0, columnspan=3, pady=(0, 15), sticky=tk.W)
         
         # Info row
-        info_row = tk.Frame(rollback_frame)
-        info_row.grid(row=0, column=0, columnspan=3, pady=(0, 10), sticky=tk.W)
+        info_row = tk.Frame(rollback_frame, bg='white')
+        info_row.grid(row=1, column=0, columnspan=3, pady=(0, 15), sticky=tk.W)
         
         tk.Label(
             info_row,
             text="Operations in history:",
-            font=("Arial", 11)
+            font=("Segoe UI", 11),
+            bg='white',
+            fg='#64748b'
         ).pack(side=tk.LEFT)
         
         self.operation_count_label = tk.Label(
             info_row,
             text="0",
-            font=("Arial", 11, "bold"),
-            fg="#3498db"
+            font=("Segoe UI", 11, "bold"),
+            fg="#2563eb",
+            bg='white'
         )
         self.operation_count_label.pack(side=tk.LEFT, padx=5)
         
-        tk.Label(rollback_frame, text="Number of Operations:", font=("Arial", 12)).grid(
-            row=1, column=0, sticky=tk.W, pady=10
+        tk.Label(rollback_frame, text="Number of Operations:", font=("Segoe UI", 11, "bold"),
+                bg='white', fg='#1e293b').grid(
+            row=2, column=0, sticky=tk.W, pady=10, padx=(0, 10)
         )
         self.rollback_count_spinbox = tk.Spinbox(
             rollback_frame,
             from_=1,
             to=100,
-            font=("Arial", 12),
-            width=18
+            font=("Segoe UI", 11),
+            width=15,
+            relief=tk.SOLID,
+            borderwidth=1
         )
-        self.rollback_count_spinbox.grid(row=1, column=1, pady=10, padx=10)
+        self.rollback_count_spinbox.grid(row=2, column=1, pady=10, padx=10, sticky='w')
         
         rollback_btn = tk.Button(
             rollback_frame,
-            text="Rollback",
-            font=("Arial", 12),
-            bg="#f39c12",
+            text="⏪ Rollback",
+            font=("Segoe UI", 11, "bold"),
+            bg="#f59e0b",
             fg="white",
+            activebackground="#d97706",
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
             command=self.on_rollback
         )
-        rollback_btn.grid(row=1, column=2, pady=10, padx=10)
+        rollback_btn.grid(row=2, column=2, pady=10, padx=10)
         
         # Warning label
         warning_label = tk.Label(
             rollback_frame,
-            text="⚠️ Warning: Rollback will undo the last N operations (LIFO order)",
-            font=("Arial", 9),
-            fg="#e67e22"
+            text="⚠️ Warning: This will undo the last N operations in LIFO order",
+            font=("Segoe UI", 9),
+            fg="#f59e0b",
+            bg='white'
         )
-        warning_label.grid(row=2, column=0, columnspan=3, pady=(0, 5))
+        warning_label.grid(row=3, column=0, columnspan=3, pady=(5, 0), sticky=tk.W)
         
-        # Operation History
-        history_frame = tk.LabelFrame(
-            self,
+        # Operation History card
+        history_card = tk.Frame(scrollable_frame, bg='white', highlightbackground="#e2e8f0", highlightthickness=1)
+        history_card.pack(pady=15, padx=30, fill=tk.BOTH, expand=True)
+        
+        history_header = tk.Frame(history_card, bg='white')
+        history_header.pack(fill=tk.X, padx=20, pady=(20, 10))
+        
+        tk.Label(
+            history_header,
             text="Recent Operations",
-            font=("Arial", 14, "bold"),
-            padx=20,
-            pady=20
+            font=("Segoe UI", 14, "bold"),
+            bg='white',
+            fg='#1e293b'
+        ).pack(side=tk.LEFT)
+        
+        refresh_btn = tk.Button(
+            history_header,
+            text="🔄 Refresh",
+            font=("Segoe UI", 10, "bold"),
+            bg="#2563eb",
+            fg="white",
+            activebackground="#1d4ed8",
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=self.refresh_history
         )
-        history_frame.pack(pady=20, padx=50, fill=tk.BOTH, expand=True)
+        refresh_btn.pack(side=tk.RIGHT)
+        
+        # History content
+        history_frame = tk.Frame(history_card, bg='white')
+        history_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
         
         # Add scrollbar to history text
-        history_scroll_frame = tk.Frame(history_frame)
-        history_scroll_frame.pack(fill=tk.BOTH, expand=True)
-        
-        scrollbar = tk.Scrollbar(history_scroll_frame)
+        scrollbar = tk.Scrollbar(history_frame)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.history_text = tk.Text(
-            history_scroll_frame,
+            history_frame,
             height=10,
-            font=("Courier", 10),
+            font=("Consolas", 10),
             state=tk.DISABLED,
-            yscrollcommand=scrollbar.set
+            yscrollcommand=scrollbar.set,
+            relief=tk.FLAT,
+            bg='#f8fafc',
+            fg='#1e293b',
+            padx=10,
+            pady=10
         )
         self.history_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.config(command=self.history_text.yview)
-        
-        refresh_btn = tk.Button(
-            history_frame,
-            text="Refresh History",
-            font=("Arial", 11),
-            bg="#3498db",
-            fg="white",
-            command=self.refresh_history
-        )
         refresh_btn.pack(pady=10)
         
         # Load initial data
